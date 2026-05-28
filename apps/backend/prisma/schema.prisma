@@ -1,0 +1,611 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ──────────────────────────────────────────────
+// ENUMS
+// ──────────────────────────────────────────────
+
+enum Role {
+  ADMIN
+  OPERATOR
+}
+
+enum OwnerType {
+  PERSONA_FISICA
+  PERSONA_JURIDICA
+}
+
+enum TaxStatus {
+  MONOTRIBUTISTA
+  RESPONSABLE_INSCRIPTO
+  EXENTO
+  CONSUMIDOR_FINAL
+}
+
+enum OwnerStatus {
+  ACTIVE
+  INACTIVE
+  BLOCKED
+}
+
+enum PropertyType {
+  CASA
+  DEPARTAMENTO
+  LOCAL_COMERCIAL
+  OFICINA
+  TERRENO
+  COCHERA
+  DEPOSITO
+  GALPON
+  OTRO
+}
+
+enum PropertyStatus {
+  AVAILABLE
+  RENTED
+  FOR_SALE
+  SOLD
+  OCCUPIED_WITHOUT_CONTRACT
+  UNDER_RENOVATION
+  BLOCKED
+}
+
+enum PaidBy {
+  AGENCY
+  OWNER
+  TENANT
+  SHARED
+}
+
+enum PhotoType {
+  ENTRY
+  EXIT
+  REPAIR
+  MARKETING
+  DOCUMENT
+  GENERAL
+}
+
+enum TenantType {
+  PERSONA_FISICA
+  PERSONA_JURIDICA
+}
+
+enum TenantStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum EmploymentStatus {
+  EMPLEADO_RELACION_DEPENDENCIA
+  AUTONOMO
+  JUBILADO
+  OTRO
+}
+
+enum ContractStatus {
+  DRAFT
+  ACTIVE
+  EXPIRED
+  TERMINATED
+  RENEWED
+  SUSPENDED
+}
+
+enum IndexType {
+  ICL_BCRA
+  IPC_INDEC
+  FREE
+  NONE
+}
+
+enum UpdateFrequency {
+  MONTHLY
+  QUARTERLY
+  FOUR_MONTHLY
+  SEMI_ANNUAL
+  ANNUAL
+}
+
+enum Currency {
+  ARS
+  USD
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  LATE
+  PARTIAL
+}
+
+enum PaymentMethod {
+  CASH
+  TRANSFER
+  CHECK
+  OTHER
+}
+
+enum ExpenseCategory {
+  EXPENSAS
+  ABL
+  GAS
+  ELECTRICIDAD
+  AGUA
+  REPARACION
+  SEGURO
+  HONORARIOS
+  OTRO
+}
+
+enum SettlementStatus {
+  DRAFT
+  SENT
+  PAID
+}
+
+enum RepairStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum RepairPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum SaleStage {
+  PROSPECTING
+  VISIT_SCHEDULED
+  OFFER_MADE
+  NEGOTIATING
+  SIGNED
+  CLOSED
+  CANCELLED
+}
+
+// ──────────────────────────────────────────────
+// AUTH
+// ──────────────────────────────────────────────
+
+model User {
+  id            Int            @id @default(autoincrement())
+  email         String         @unique
+  password      String
+  name          String
+  role          Role           @default(ADMIN)
+  isActive      Boolean        @default(true)
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+  refreshTokens RefreshToken[]
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  userId    Int      @map("user_id")
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
+}
+
+// ──────────────────────────────────────────────
+// PROPIETARIOS
+// ──────────────────────────────────────────────
+
+model Owner {
+  id           Int             @id @default(autoincrement())
+  type         OwnerType       @default(PERSONA_FISICA)
+  firstName    String?         @map("first_name")
+  lastName     String?         @map("last_name")
+  businessName String?         @map("business_name")
+  cuit         String          @unique
+  taxStatus    TaxStatus       @default(MONOTRIBUTISTA) @map("tax_status")
+  address      String?
+  phone        String?
+  phone2       String?
+  email        String?
+  email2       String?
+  cbu          String?
+  bankName     String?         @map("bank_name")
+  notes        String?
+  status       OwnerStatus     @default(ACTIVE)
+  deletedAt    DateTime?       @map("deleted_at")
+  createdAt    DateTime        @default(now()) @map("created_at")
+  updatedAt    DateTime        @updatedAt @map("updated_at")
+  properties   PropertyOwner[]
+
+  @@map("owners")
+}
+
+// ──────────────────────────────────────────────
+// PROPIEDADES
+// ──────────────────────────────────────────────
+
+model Property {
+  id                          Int             @id @default(autoincrement())
+  type                        PropertyType
+  street                      String
+  number                      String
+  floor                       String?
+  apartment                   String?
+  zipCode                     String?         @map("zip_code")
+  city                        String
+  province                    String          @default("Buenos Aires")
+  cadastralNomenclature       String?         @map("cadastral_nomenclature")
+  deedNumber                  String?         @map("deed_number")
+  coveredSurface              Float?          @map("covered_surface")
+  totalSurface                Float?          @map("total_surface")
+  age                         Int?
+  rooms                       String?
+  appraisalArs                Float?          @map("appraisal_ars")
+  appraisalUsd                Float?          @map("appraisal_usd")
+  status                      PropertyStatus  @default(AVAILABLE)
+  ablPaidBy                   PaidBy          @default(TENANT) @map("abl_paid_by")
+  ordinaryExpensesPaidBy      PaidBy          @default(TENANT) @map("ordinary_expenses_paid_by")
+  extraordinaryExpensesPaidBy PaidBy          @default(TENANT) @map("extraordinary_expenses_paid_by")
+  gasPaidBy                   PaidBy          @default(TENANT) @map("gas_paid_by")
+  electricityPaidBy           PaidBy          @default(TENANT) @map("electricity_paid_by")
+  waterPaidBy                 PaidBy          @default(TENANT) @map("water_paid_by")
+  ablAmount                   Float?          @map("abl_amount")
+  monthlyExpensesEstimate     Float?          @map("monthly_expenses_estimate")
+  hasMortgage                 Boolean         @default(false) @map("has_mortgage")
+  hasLien                     Boolean         @default(false) @map("has_lien")
+  notes                       String?
+  publishForRent              Boolean         @default(false) @map("publish_for_rent")
+  publishForSale              Boolean         @default(false) @map("publish_for_sale")
+  deletedAt                   DateTime?       @map("deleted_at")
+  createdAt                   DateTime        @default(now()) @map("created_at")
+  updatedAt                   DateTime        @updatedAt @map("updated_at")
+  owners                      PropertyOwner[]
+  photos                      PropertyPhoto[]
+  contracts                   Contract[]
+  expenses                    Expense[]
+  settlements                 Settlement[]
+  repairs                     Repair[]
+  sales                       Sale[]
+  informalOccupations         InformalOccupation[]
+
+  @@map("properties")
+}
+
+model PropertyOwner {
+  id         Int      @id @default(autoincrement())
+  propertyId Int      @map("property_id")
+  ownerId    Int      @map("owner_id")
+  percentage Float    @default(100)
+  createdAt  DateTime @default(now()) @map("created_at")
+  property   Property @relation(fields: [propertyId], references: [id])
+  owner      Owner    @relation(fields: [ownerId], references: [id])
+
+  @@unique([propertyId, ownerId])
+  @@map("property_owners")
+}
+
+// ──────────────────────────────────────────────
+// INQUILINOS
+// ──────────────────────────────────────────────
+
+model Tenant {
+  id               Int               @id @default(autoincrement())
+  type             TenantType        @default(PERSONA_FISICA)
+  firstName        String?           @map("first_name")
+  lastName         String?           @map("last_name")
+  businessName     String?           @map("business_name")
+  dni              String?
+  cuit             String?
+  birthDate        DateTime?         @map("birth_date")
+  address          String?
+  workAddress      String?           @map("work_address")
+  employer         String?
+  phone            String?
+  phone2           String?
+  email            String?
+  employmentStatus EmploymentStatus? @map("employment_status")
+  status           TenantStatus      @default(ACTIVE)
+  notes            String?
+  deletedAt        DateTime?         @map("deleted_at")
+  createdAt        DateTime          @default(now()) @map("created_at")
+  updatedAt        DateTime          @updatedAt @map("updated_at")
+  contracts        ContractTenant[]
+  informalOccupations InformalOccupation[]
+
+  @@map("tenants")
+}
+
+// ──────────────────────────────────────────────
+// CONTRATOS
+// ──────────────────────────────────────────────
+
+model Contract {
+  id                 Int                  @id @default(autoincrement())
+  propertyId         Int                  @map("property_id")
+  startDate          DateTime             @map("start_date")
+  endDate            DateTime             @map("end_date")
+  durationMonths     Int                  @map("duration_months")
+  initialAmount      Float                @map("initial_amount")
+  currentAmount      Float                @map("current_amount")
+  currency           Currency             @default(ARS)
+  indexType          IndexType            @default(ICL_BCRA) @map("index_type")
+  updateFrequency    UpdateFrequency      @default(QUARTERLY) @map("update_frequency")
+  freePercentage     Float?               @map("free_percentage")
+  adminCommissionPct Float                @default(10) @map("admin_commission_pct")
+  initialCommission  Float?               @map("initial_commission")
+  status             ContractStatus       @default(DRAFT)
+  terminationDate    DateTime?            @map("termination_date")
+  terminationReason  String?              @map("termination_reason")
+  specialClauses     String?              @map("special_clauses")
+  lastAdjustmentDate  DateTime?            @map("last_adjustment_date")
+  nextAdjustmentDate  DateTime?            @map("next_adjustment_date")
+  previousContractId  Int?                 @map("previous_contract_id")
+  deletedAt           DateTime?            @map("deleted_at")
+  createdAt           DateTime             @default(now()) @map("created_at")
+  updatedAt           DateTime             @updatedAt @map("updated_at")
+  property            Property             @relation(fields: [propertyId], references: [id])
+  previousContract    Contract?            @relation("ContractRenewal", fields: [previousContractId], references: [id])
+  renewals            Contract[]           @relation("ContractRenewal")
+  tenants             ContractTenant[]
+  adjustments         ContractAdjustment[]
+  payments            Payment[]
+  expenses            Expense[]
+  settlements         Settlement[]
+  informalOccupations InformalOccupation[]
+
+  @@map("contracts")
+}
+
+model ContractTenant {
+  id         Int      @id @default(autoincrement())
+  contractId Int      @map("contract_id")
+  tenantId   Int      @map("tenant_id")
+  isPrimary  Boolean  @default(false) @map("is_primary")
+  createdAt  DateTime @default(now()) @map("created_at")
+  contract   Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  tenant     Tenant   @relation(fields: [tenantId], references: [id])
+
+  @@unique([contractId, tenantId])
+  @@map("contract_tenants")
+}
+
+model ContractAdjustment {
+  id             Int       @id @default(autoincrement())
+  contractId     Int       @map("contract_id")
+  appliedAt      DateTime  @map("applied_at")
+  previousAmount Float     @map("previous_amount")
+  newAmount      Float     @map("new_amount")
+  percentage     Float
+  indexType      IndexType @map("index_type")
+  indexValue     Float?    @map("index_value")
+  notes          String?
+  createdAt      DateTime  @default(now()) @map("created_at")
+  contract       Contract  @relation(fields: [contractId], references: [id])
+
+  @@map("contract_adjustments")
+}
+
+// ──────────────────────────────────────────────
+// COBROS
+// ──────────────────────────────────────────────
+
+model Payment {
+  id             Int           @id @default(autoincrement())
+  contractId     Int           @map("contract_id")
+  periodYear     Int           @map("period_year")
+  periodMonth    Int           @map("period_month")
+  expectedAmount Float         @map("expected_amount")
+  paidAmount     Float?        @map("paid_amount")
+  status         PaymentStatus @default(PENDING)
+  dueDate        DateTime      @map("due_date")
+  paidAt         DateTime?     @map("paid_at")
+  paymentMethod  PaymentMethod? @map("payment_method")
+  receiptNumber  String?       @map("receipt_number")
+  notes          String?
+  interestAmount Float?        @map("interest_amount")
+  interestRate   Float?        @map("interest_rate")
+  interestDays   Int?          @map("interest_days")
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+  contract       Contract      @relation(fields: [contractId], references: [id])
+
+  @@unique([contractId, periodYear, periodMonth])
+  @@map("payments")
+}
+
+// ──────────────────────────────────────────────
+// LIQUIDACIONES
+// ──────────────────────────────────────────────
+
+model Settlement {
+  id               Int              @id @default(autoincrement())
+  propertyId       Int              @map("property_id")
+  contractId       Int              @map("contract_id")
+  periodYear       Int              @map("period_year")
+  periodMonth      Int              @map("period_month")
+  status           SettlementStatus @default(DRAFT)
+  rentCollected    Float            @map("rent_collected")
+  commissionPct    Float            @map("commission_pct")
+  commissionAmount Float            @map("commission_amount")
+  expensesAmount   Float            @map("expenses_amount")
+  netAmount        Float            @map("net_amount")
+  currency         Currency         @default(ARS)
+  sentAt           DateTime?        @map("sent_at")
+  paidAt           DateTime?        @map("paid_at")
+  notes            String?
+  createdAt        DateTime         @default(now()) @map("created_at")
+  updatedAt        DateTime         @updatedAt @map("updated_at")
+  property         Property         @relation(fields: [propertyId], references: [id])
+  contract         Contract         @relation(fields: [contractId], references: [id])
+
+  @@unique([contractId, periodYear, periodMonth])
+  @@map("settlements")
+}
+
+// ──────────────────────────────────────────────
+// GASTOS
+// ──────────────────────────────────────────────
+
+model Expense {
+  id             Int             @id @default(autoincrement())
+  propertyId     Int             @map("property_id")
+  contractId     Int?            @map("contract_id")
+  category       ExpenseCategory @default(OTRO)
+  description    String
+  amount         Float
+  currency       Currency        @default(ARS)
+  date           DateTime
+  periodYear     Int             @map("period_year")
+  periodMonth    Int             @map("period_month")
+  paidBy         PaidBy          @default(AGENCY) @map("paid_by")
+  invoiceNumber  String?         @map("invoice_number")
+  notes          String?
+  deletedAt      DateTime?       @map("deleted_at")
+  createdAt      DateTime        @default(now()) @map("created_at")
+  updatedAt      DateTime        @updatedAt @map("updated_at")
+  property       Property        @relation(fields: [propertyId], references: [id])
+  contract       Contract?       @relation(fields: [contractId], references: [id])
+
+  @@map("expenses")
+}
+
+// ──────────────────────────────────────────────
+// REPARACIONES
+// ──────────────────────────────────────────────
+
+model Repair {
+  id             Int            @id @default(autoincrement())
+  propertyId     Int            @map("property_id")
+  title          String
+  description    String?
+  category       String?
+  status         RepairStatus   @default(PENDING)
+  priority       RepairPriority @default(MEDIUM)
+  provider       String?
+  providerPhone  String?        @map("provider_phone")
+  estimatedCost  Float?         @map("estimated_cost")
+  actualCost     Float?         @map("actual_cost")
+  currency       Currency       @default(ARS)
+  reportedAt     DateTime       @default(now()) @map("reported_at")
+  scheduledAt    DateTime?      @map("scheduled_at")
+  completedAt    DateTime?      @map("completed_at")
+  notes          String?
+  createdAt      DateTime       @default(now()) @map("created_at")
+  updatedAt      DateTime       @updatedAt @map("updated_at")
+  property       Property       @relation(fields: [propertyId], references: [id])
+
+  @@map("repairs")
+}
+
+// ──────────────────────────────────────────────
+// VENTAS
+// ──────────────────────────────────────────────
+
+model Sale {
+  id               Int       @id @default(autoincrement())
+  propertyId       Int       @map("property_id")
+  askingPrice      Float     @map("asking_price")
+  currency         Currency  @default(USD)
+  stage            SaleStage @default(PROSPECTING)
+  buyerName        String?   @map("buyer_name")
+  buyerPhone       String?   @map("buyer_phone")
+  buyerEmail       String?   @map("buyer_email")
+  offerAmount      Float?    @map("offer_amount")
+  closingDate      DateTime? @map("closing_date")
+  commissionPct    Float     @default(3) @map("commission_pct")
+  commissionAmount Float?    @map("commission_amount")
+  notes            String?
+  deletedAt        DateTime? @map("deleted_at")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+  property         Property  @relation(fields: [propertyId], references: [id])
+
+  @@map("sales")
+}
+
+model PropertyPhoto {
+  id         Int       @id @default(autoincrement())
+  propertyId Int       @map("property_id")
+  url        String
+  type       PhotoType @default(GENERAL)
+  caption    String?
+  takenAt    DateTime  @default(now()) @map("taken_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  property   Property  @relation(fields: [propertyId], references: [id])
+
+  @@map("property_photos")
+}
+
+// ──────────────────────────────────────────────
+// OCUPACIONES SIN CONTRATO
+// ──────────────────────────────────────────────
+
+enum OccupationReason {
+  EXPIRED_CONTRACT
+  OWNER_FAMILY
+  CONTRACT_IN_PROGRESS
+  OTHER
+}
+
+enum OccupationStatus {
+  ACTIVE
+  REGULARIZED
+  VACATED
+}
+
+model InformalOccupation {
+  id                    Int               @id @default(autoincrement())
+  propertyId            Int               @map("property_id")
+  occupantName          String            @map("occupant_name")
+  occupantPhone         String?           @map("occupant_phone")
+  occupantTenantId      Int?              @map("occupant_tenant_id")
+  startDate             DateTime          @map("start_date")
+  reason                OccupationReason  @default(OTHER)
+  informalAmount        Float?            @map("informal_amount")
+  currency              Currency          @default(ARS)
+  status                OccupationStatus  @default(ACTIVE)
+  endDate               DateTime?         @map("end_date")
+  convertedToContractId Int?              @map("converted_to_contract_id")
+  alertActive           Boolean           @default(true) @map("alert_active")
+  notes                 String?
+  createdAt             DateTime          @default(now()) @map("created_at")
+  updatedAt             DateTime          @updatedAt @map("updated_at")
+  property              Property          @relation(fields: [propertyId], references: [id])
+  occupantTenant        Tenant?           @relation(fields: [occupantTenantId], references: [id])
+  convertedToContract   Contract?         @relation(fields: [convertedToContractId], references: [id])
+
+  @@map("informal_occupations")
+}
+
+// ──────────────────────────────────────────────
+// DOCUMENTOS
+// ──────────────────────────────────────────────
+
+model Document {
+  id         Int       @id @default(autoincrement())
+  entityType String    @map("entity_type")
+  entityId   Int       @map("entity_id")
+  name       String
+  fileType   String    @map("file_type")
+  url        String
+  sizeBytes  Int?      @map("size_bytes")
+  mimeType   String?   @map("mime_type")
+  notes      String?
+  deletedAt  DateTime? @map("deleted_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  @@index([entityType, entityId])
+  @@map("documents")
+}

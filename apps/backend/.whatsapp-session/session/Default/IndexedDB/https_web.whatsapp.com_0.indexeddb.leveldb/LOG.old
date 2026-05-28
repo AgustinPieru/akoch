@@ -1,0 +1,45 @@
+2026/05/28-00:42:02.327 32489b Reusing MANIFEST /Users/agu/Documents/Proyectos/Akoch-inmobiliaria/apps/backend/.whatsapp-session/session/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2026/05/28-00:42:02.339 32489b Recovering log #5235
+2026/05/28-00:42:02.341 32489b Reusing old log /Users/agu/Documents/Proyectos/Akoch-inmobiliaria/apps/backend/.whatsapp-session/session/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/005235.log 
+2026/05/28-00:44:06.739 32489b Compacting 1@1 + 1@2 files
+2026/05/28-00:44:06.753 32489b Generated table #5272@1: 24306 keys, 911275 bytes
+2026/05/28-00:44:06.753 32489b Compacted 1@1 + 1@2 files => 911275 bytes
+2026/05/28-00:44:06.754 32489b compacted to: files[ 0 1 51 34 0 0 0 ]
+2026/05/28-00:44:06.754 32489b Delete type=2 #5240
+2026/05/28-00:44:06.754 32489b Delete type=2 #5227
+2026/05/28-00:44:06.903 32489a Compacting 1@1 + 10@2 files
+2026/05/28-00:44:06.942 32489a Generated table #5273@1: 127086 keys, 2285366 bytes
+2026/05/28-00:44:06.980 32489a Generated table #5274@1: 106883 keys, 2258848 bytes
+2026/05/28-00:44:06.984 32489a Level-0 table #5277: started
+2026/05/28-00:44:06.996 32489a Level-0 table #5277: 1299207 bytes OK
+2026/05/28-00:44:06.998 32489a Delete type=0 #5235
+2026/05/28-00:44:07.030 32489a Generated table #5275@1: 100366 keys, 2249637 bytes
+2026/05/28-00:44:07.063 32489a Generated table #5278@1: 99611 keys, 2249547 bytes
+2026/05/28-00:44:07.097 32489a Generated table #5279@1: 98207 keys, 2246254 bytes
+2026/05/28-00:44:07.132 32489a Generated table #5280@1: 101468 keys, 2249771 bytes
+2026/05/28-00:44:07.170 32489a Generated table #5281@1: 99072 keys, 2248156 bytes
+2026/05/28-00:44:07.202 32489a Generated table #5282@1: 97507 keys, 2247206 bytes
+2026/05/28-00:44:07.234 32489a Generated table #5283@1: 97796 keys, 2248066 bytes
+2026/05/28-00:44:07.266 32489a Generated table #5284@1: 99067 keys, 2249257 bytes
+2026/05/28-00:44:07.268 32489a Generated table #5285@1: 145 keys, 3040 bytes
+2026/05/28-00:44:07.268 32489a Compacted 1@1 + 10@2 files => 22535148 bytes
+2026/05/28-00:44:07.270 32489a compacted to: files[ 1 0 52 34 0 0 0 ]
+2026/05/28-00:44:07.270 32489a Delete type=2 #5119
+2026/05/28-00:44:07.270 32489a Delete type=2 #5118
+2026/05/28-00:44:07.270 32489a Delete type=2 #5124
+2026/05/28-00:44:07.270 32489a Delete type=2 #5120
+2026/05/28-00:44:07.270 32489a Delete type=2 #5121
+2026/05/28-00:44:07.270 32489a Delete type=2 #5123
+2026/05/28-00:44:07.270 32489a Delete type=2 #5122
+2026/05/28-00:44:07.270 32489a Delete type=2 #5239
+2026/05/28-00:44:07.270 32489a Delete type=2 #5115
+2026/05/28-00:44:07.270 32489a Delete type=2 #5116
+2026/05/28-00:44:07.270 32489a Delete type=2 #5117
+2026/05/28-00:44:07.737 32489d Compacting 1@0 + 0@1 files
+2026/05/28-00:44:07.750 32489d Generated table #5286@0: 27794 keys, 561324 bytes
+2026/05/28-00:44:07.751 32489d Generated table #5287@0: 29 keys, 1653 bytes
+2026/05/28-00:44:07.756 32489d Generated table #5288@0: 8658 keys, 316353 bytes
+2026/05/28-00:44:07.760 32489d Generated table #5289@0: 8188 keys, 165830 bytes
+2026/05/28-00:44:07.760 32489d Compacted 1@0 + 0@1 files => 1045160 bytes
+2026/05/28-00:44:07.761 32489d compacted to: files[ 0 4 52 34 0 0 0 ]
+2026/05/28-00:44:07.762 32489d Delete type=2 #5277
