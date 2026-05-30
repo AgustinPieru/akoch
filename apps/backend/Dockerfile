@@ -26,8 +26,8 @@ ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 WORKDIR /app
 
 COPY package*.json ./
-# Instalar todas las deps (incluye devDeps para poder compilar)
-RUN npm ci
+# npm install en lugar de npm ci porque el package-lock.json está en la raíz del monorepo
+RUN npm install
 
 COPY prisma ./prisma/
 RUN npx prisma generate
