@@ -1,7 +1,13 @@
 import axios from 'axios';
 
+const BASE_URL = import.meta.env.VITE_API_URL
+  ? `${import.meta.env.VITE_API_URL}/api/v1`
+  : import.meta.env.DEV
+  ? '/api/v1'
+  : 'https://devoted-vibrancy-production-57b3.up.railway.app/api/v1';
+
 const api = axios.create({
-  baseURL: '/api/v1',
+  baseURL: BASE_URL,
   withCredentials: true,
   headers: { 'Content-Type': 'application/json' },
 });
@@ -62,7 +68,7 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const { data } = await axios.post('/api/v1/auth/refresh', {}, { withCredentials: true });
+        const { data } = await axios.post(`${BASE_URL}/auth/refresh`, {}, { withCredentials: true });
         const newToken = data.accessToken;
         localStorage.setItem('access_token', newToken);
         processQueue(null, newToken);
