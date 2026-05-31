@@ -10,6 +10,10 @@ function getResend() {
   return new Resend(key);
 }
 
+function fromAddress() {
+  return process.env.RESEND_FROM_EMAIL ?? 'Inmobiliaria <onboarding@resend.dev>';
+}
+
 // ─── WhatsApp helpers ─────────────────────────────────────────────────────────
 
 function normalizeDigits(phone: string): string {
@@ -58,10 +62,8 @@ export async function sendReceiptViaEmail(paymentId: number, email: string) {
   const resend = getResend();
   const { buffer, filename, period } = await generateReceiptBuffer(paymentId);
 
-  const fromEmail = process.env.RESEND_FROM_EMAIL ?? 'Inmobiliaria <onboarding@resend.dev>';
-
   const result = await resend.emails.send({
-    from: fromEmail,
+    from: fromAddress(),
     to: email,
     subject: `Recibo de alquiler — ${period}`,
     html: `
@@ -75,7 +77,6 @@ export async function sendReceiptViaEmail(paymentId: number, email: string) {
   });
 
   if (result.error) throw { status: 500, message: result.error.message, code: 'EMAIL_ERROR' };
-
   return { sent: true, email, period, messageId: result.data?.id };
 }
 
@@ -100,10 +101,8 @@ export async function sendSettlementViaEmail(settlementId: number, email: string
   const resend = getResend();
   const { buffer, filename, period } = await generateSettlementBuffer(settlementId);
 
-  const fromEmail = process.env.RESEND_FROM_EMAIL ?? 'Inmobiliaria <onboarding@resend.dev>';
-
   const result = await resend.emails.send({
-    from: fromEmail,
+    from: fromAddress(),
     to: email,
     subject: `Liquidación de alquiler — ${period}`,
     html: `
@@ -117,6 +116,5 @@ export async function sendSettlementViaEmail(settlementId: number, email: string
   });
 
   if (result.error) throw { status: 500, message: result.error.message, code: 'EMAIL_ERROR' };
-
   return { sent: true, email, period, messageId: result.data?.id };
 }

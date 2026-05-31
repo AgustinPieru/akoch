@@ -236,6 +236,7 @@ export default function ContractDetailPage() {
             <PaymentsTable
               payments={paymentsData?.data ?? []}
               currency={contract.currency}
+              hideContext
             />
           </Paper>
         </Grid>

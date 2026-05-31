@@ -31,6 +31,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: 'default' | 'success
 interface Props {
   payments: Payment[];
   currency?: string; // fallback; cada fila usa p.contract.currency
+  hideContext?: boolean; // oculta columna Inquilino/Inmueble (para vistas dentro de un contrato)
 }
 
 async function downloadReceipt(payment: Payment) {
@@ -43,7 +44,7 @@ async function downloadReceipt(payment: Payment) {
   URL.revokeObjectURL(url);
 }
 
-export default function PaymentsTable({ payments, currency }: Props) {
+export default function PaymentsTable({ payments, currency, hideContext = false }: Props) {
   const [selected, setSelected] = useState<Payment | null>(null);
   const [sendReceipt, setSendReceipt] = useState<Payment | null>(null);
 
@@ -62,7 +63,7 @@ export default function PaymentsTable({ payments, currency }: Props) {
         <TableHead>
           <TableRow sx={{ '& th': { fontWeight: 600 } }}>
             <TableCell>Período</TableCell>
-            <TableCell sx={{ minWidth: 200 }}>Inquilino / Inmueble</TableCell>
+            {!hideContext && <TableCell sx={{ minWidth: 200 }}>Inquilino / Inmueble</TableCell>}
             <TableCell>Vencimiento</TableCell>
             <TableCell align="right">Esperado</TableCell>
             <TableCell align="right">Cobrado</TableCell>
@@ -76,7 +77,7 @@ export default function PaymentsTable({ payments, currency }: Props) {
         <TableBody>
           {payments.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={10} align="center" sx={{ py: 4, color: 'text.secondary' }}>
+              <TableCell colSpan={hideContext ? 9 : 10} align="center" sx={{ py: 4, color: 'text.secondary' }}>
                 No hay cobros generados.
               </TableCell>
             </TableRow>
@@ -98,22 +99,24 @@ export default function PaymentsTable({ payments, currency }: Props) {
                       {MONTHS[p.periodMonth - 1]} {p.periodYear}
                     </Typography>
                   </TableCell>
-                  <TableCell>
-                    <Box>
-                      <Box display="flex" alignItems="center" gap={0.5}>
-                        <Person sx={{ fontSize: 13, color: 'text.disabled' }} />
-                        <Typography variant="body2" fontWeight={500} lineHeight={1.3}>
-                          {primaryTenant ? tenantName(primaryTenant) : '—'}
-                        </Typography>
+                  {!hideContext && (
+                    <TableCell>
+                      <Box>
+                        <Box display="flex" alignItems="center" gap={0.5}>
+                          <Person sx={{ fontSize: 13, color: 'text.disabled' }} />
+                          <Typography variant="body2" fontWeight={500} lineHeight={1.3}>
+                            {primaryTenant ? tenantName(primaryTenant) : '—'}
+                          </Typography>
+                        </Box>
+                        <Box display="flex" alignItems="center" gap={0.5} mt={0.25}>
+                          <Home sx={{ fontSize: 13, color: 'text.disabled' }} />
+                          <Typography variant="caption" color="text.secondary" lineHeight={1.3}>
+                            {street} {num}, {city}
+                          </Typography>
+                        </Box>
                       </Box>
-                      <Box display="flex" alignItems="center" gap={0.5} mt={0.25}>
-                        <Home sx={{ fontSize: 13, color: 'text.disabled' }} />
-                        <Typography variant="caption" color="text.secondary" lineHeight={1.3}>
-                          {street} {num}, {city}
-                        </Typography>
-                      </Box>
-                    </Box>
-                  </TableCell>
+                    </TableCell>
+                  )}
                   <TableCell>{formatDate(p.dueDate)}</TableCell>
                   <TableCell align="right">{formatMoney(p.expectedAmount, p.contract.currency)}</TableCell>
                   <TableCell align="right">{p.paidAmount != null ? formatMoney(p.paidAmount, p.contract.currency) : '—'}</TableCell>

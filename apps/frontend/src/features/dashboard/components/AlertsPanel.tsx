@@ -3,8 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
   Box, Card, CardContent, Typography, Chip, List, ListItemButton,
-  ListItemText, Collapse, IconButton, Tooltip, Skeleton,
-  alpha,
+  ListItemText, Collapse, IconButton, Tooltip, alpha,
 } from '@mui/material';
 import {
   Error as CriticalIcon,
@@ -164,23 +163,6 @@ function AlertGroup({ severity, alerts }: { severity: Severity; alerts: Alert[] 
   );
 }
 
-function AlertsPanelSkeleton() {
-  return (
-    <Card sx={{ mb: 3 }}>
-      <CardContent sx={{ pb: '12px !important' }}>
-        <Box display="flex" alignItems="center" justifyContent="space-between" mb={1.5}>
-          <Skeleton variant="text" width={140} height={28} />
-          <Box display="flex" gap={1}>
-            <Skeleton variant="rounded" width={48} height={24} />
-            <Skeleton variant="rounded" width={48} height={24} />
-          </Box>
-        </Box>
-        <Skeleton variant="rounded" height={40} sx={{ mb: 1, borderRadius: 1.5 }} />
-        <Skeleton variant="rounded" height={40} sx={{ borderRadius: 1.5 }} />
-      </CardContent>
-    </Card>
-  );
-}
 
 export default function AlertsPanel() {
   const { data, isLoading, refetch, isFetching } = useQuery<AlertsData>({
@@ -189,7 +171,7 @@ export default function AlertsPanel() {
     staleTime: 2 * 60 * 1000,
   });
 
-  if (isLoading) return <AlertsPanelSkeleton />;
+  if (isLoading) return null;
 
   const totalAlerts = data ? data.summary.critical + data.summary.warning + data.summary.info : 0;
   if (!data || totalAlerts === 0) return null;
