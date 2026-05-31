@@ -50,6 +50,17 @@ const theme = createTheme({
     MuiChip: {
       styleOverrides: { root: { fontWeight: 500 } },
     },
+    MuiTextField: {
+      defaultProps: {
+        InputLabelProps: { shrink: true },
+      },
+    },
+    MuiInputLabel: {
+      defaultProps: { shrink: true },
+    },
+    MuiOutlinedInput: {
+      defaultProps: { notched: true },
+    },
   },
 });
 

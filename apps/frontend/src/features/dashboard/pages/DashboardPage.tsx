@@ -2,10 +2,10 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
-  Box, Grid, Card, CardContent, Typography, Chip, CircularProgress,
+  Box, Grid, Card, CardContent, Typography, Chip,
   Alert, List, ListItemText, Divider, ListItemButton,
   Table, TableBody, TableCell, TableHead, TableRow, LinearProgress,
-  MenuItem, TextField,
+  MenuItem, TextField, Skeleton,
 } from '@mui/material';
 import {
   Home, People, Description, PersonPin,
@@ -158,10 +158,25 @@ export default function DashboardPage() {
         {now.toLocaleDateString('es-AR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
       </Typography>
 
-      {isLoading && <Box display="flex" justifyContent="center" py={6}><CircularProgress /></Box>}
       {error && <Alert severity="error">Error al cargar el dashboard</Alert>}
 
       <AlertsPanel />
+
+      {isLoading && (
+        <Grid container spacing={2} mb={3}>
+          {[...Array(6)].map((_, i) => (
+            <Grid item xs={6} sm={4} md={2} key={i}>
+              <Card>
+                <CardContent>
+                  <Skeleton variant="text" width="65%" sx={{ mb: 0.5 }} />
+                  <Skeleton variant="text" width="45%" height={44} />
+                  <Skeleton variant="text" width="80%" />
+                </CardContent>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
+      )}
 
       {data && (
         <>
