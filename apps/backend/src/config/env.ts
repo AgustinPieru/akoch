@@ -11,6 +11,7 @@ export const env = {
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '24h',
   REFRESH_TOKEN_EXPIRES_IN: process.env.REFRESH_TOKEN_EXPIRES_IN || '7d',
   FRONTEND_URL: process.env.FRONTEND_URL || 'http://localhost:5173',
+  BACKEND_URL: process.env.BACKEND_URL || 'http://localhost:3001',
   RESEND_API_KEY: process.env.RESEND_API_KEY || '',
   RESEND_FROM_EMAIL: process.env.RESEND_FROM_EMAIL || 'Inmobiliaria <onboarding@resend.dev>',
   // Tasa anual BNA para intereses por mora (decimal, ej: 0.40 = 40%)

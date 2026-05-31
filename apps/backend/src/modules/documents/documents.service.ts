@@ -1,13 +1,14 @@
 import { PrismaClient } from '@prisma/client';
 import path from 'path';
 import fs from 'fs';
+import { env } from '../../config/env';
 
 const prisma = new PrismaClient();
 
 export type EntityType = 'owner' | 'tenant' | 'property' | 'contract';
 
 function fileUrl(filename: string) {
-  return `/uploads/${filename}`;
+  return `${env.BACKEND_URL}/uploads/${filename}`;
 }
 
 export async function listDocuments(entityType: EntityType, entityId: number) {
