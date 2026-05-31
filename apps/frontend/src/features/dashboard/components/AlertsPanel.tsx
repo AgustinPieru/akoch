@@ -73,7 +73,7 @@ function entityLink(entityType: string, entityId: number) {
 }
 
 function AlertGroup({ severity, alerts }: { severity: Severity; alerts: Alert[] }) {
-  const [expanded, setExpanded] = useState(severity === 'critical');
+  const [expanded, setExpanded] = useState(false);
   const navigate = useNavigate();
   const cfg = SEVERITY_CONFIG[severity];
   const Icon = cfg.icon;
