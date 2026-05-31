@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import {
   Table, TableBody, TableCell, TableHead, TableRow, Chip, IconButton,
-  Tooltip, Typography,
+  Tooltip, Typography, Box,
 } from '@mui/material';
-import { CheckCircle, Warning, PictureAsPdf, Send } from '@mui/icons-material';
+import { CheckCircle, Warning, PictureAsPdf, Send, Home, Person } from '@mui/icons-material';
 import api from '@/lib/axios';
 import { Payment } from '../api/usePayments';
 import RegisterPaymentDialog from './RegisterPaymentDialog';
@@ -12,6 +12,14 @@ import SendReceiptDialog from '@/features/notifications/components/SendReceiptDi
 const MONTHS_SHORT = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 
 const MONTHS = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+
+type TenantRef = Payment['contract']['tenants'][number]['tenant'];
+
+function tenantName(t: TenantRef) {
+  return t.type === 'PERSONA_JURIDICA'
+    ? (t.businessName ?? '—')
+    : [t.firstName, t.lastName].filter(Boolean).join(' ') || '—';
+}
 
 const STATUS_CONFIG: Record<string, { label: string; color: 'default' | 'success' | 'error' | 'warning' }> = {
   PENDING: { label: 'Pendiente', color: 'default' },
@@ -54,6 +62,7 @@ export default function PaymentsTable({ payments, currency }: Props) {
         <TableHead>
           <TableRow sx={{ '& th': { fontWeight: 600 } }}>
             <TableCell>Período</TableCell>
+            <TableCell sx={{ minWidth: 200 }}>Inquilino / Inmueble</TableCell>
             <TableCell>Vencimiento</TableCell>
             <TableCell align="right">Esperado</TableCell>
             <TableCell align="right">Cobrado</TableCell>
@@ -67,7 +76,7 @@ export default function PaymentsTable({ payments, currency }: Props) {
         <TableBody>
           {payments.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={9} align="center" sx={{ py: 4, color: 'text.secondary' }}>
+              <TableCell colSpan={10} align="center" sx={{ py: 4, color: 'text.secondary' }}>
                 No hay cobros generados.
               </TableCell>
             </TableRow>
@@ -78,12 +87,32 @@ export default function PaymentsTable({ payments, currency }: Props) {
               const methodLabel: Record<string, string> = {
                 TRANSFER: 'Transferencia', CASH: 'Efectivo', CHECK: 'Cheque', OTHER: 'Otro',
               };
+              const primaryTenant = p.contract.tenants.find((t) => t.isPrimary)?.tenant
+                ?? p.contract.tenants[0]?.tenant;
+              const { street, number: num, city } = p.contract.property;
+
               return (
                 <TableRow key={p.id} sx={{ opacity: p.status === 'PAID' ? 0.75 : 1 }}>
                   <TableCell>
                     <Typography variant="body2" fontWeight={500}>
                       {MONTHS[p.periodMonth - 1]} {p.periodYear}
                     </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Box>
+                      <Box display="flex" alignItems="center" gap={0.5}>
+                        <Person sx={{ fontSize: 13, color: 'text.disabled' }} />
+                        <Typography variant="body2" fontWeight={500} lineHeight={1.3}>
+                          {primaryTenant ? tenantName(primaryTenant) : '—'}
+                        </Typography>
+                      </Box>
+                      <Box display="flex" alignItems="center" gap={0.5} mt={0.25}>
+                        <Home sx={{ fontSize: 13, color: 'text.disabled' }} />
+                        <Typography variant="caption" color="text.secondary" lineHeight={1.3}>
+                          {street} {num}, {city}
+                        </Typography>
+                      </Box>
+                    </Box>
                   </TableCell>
                   <TableCell>{formatDate(p.dueDate)}</TableCell>
                   <TableCell align="right">{formatMoney(p.expectedAmount, p.contract.currency)}</TableCell>

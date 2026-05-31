@@ -15,6 +15,7 @@ export async function getExpenses(req: Request, res: Response, next: NextFunctio
       search: req.query.search as string | undefined,
       ownerId: req.query.ownerId ? Number(req.query.ownerId) : undefined,
       tenantId: req.query.tenantId ? Number(req.query.tenantId) : undefined,
+      paidBy: req.query.paidBy as string | undefined,
     });
     res.json(result);
   } catch (err) {

@@ -19,7 +19,7 @@ const currentYear = new Date().getFullYear();
 const YEAR_OPTIONS = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i);
 
 export default function PaymentsListPage() {
-  const [status, setStatus] = useState('');
+  const [status, setStatus] = useState('PENDING');
   const [year, setYear] = useState<number | ''>(currentYear);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(0);

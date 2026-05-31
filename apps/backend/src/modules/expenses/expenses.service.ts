@@ -13,6 +13,7 @@ export interface ExpensesQuery {
   search?: string;
   ownerId?: number;
   tenantId?: number;
+  paidBy?: string;
 }
 
 export interface CreateExpenseInput {
@@ -58,6 +59,7 @@ export async function getExpenses(query: ExpensesQuery) {
     ...(query.month && { periodMonth: query.month }),
     ...(query.ownerId && { property: { owners: { some: { ownerId: query.ownerId } } } }),
     ...(query.tenantId && { contract: { tenants: { some: { tenantId: query.tenantId } } } }),
+    ...(query.paidBy && { paidBy: query.paidBy as PaidBy }),
     ...(searchFilter && searchFilter),
   };
 
