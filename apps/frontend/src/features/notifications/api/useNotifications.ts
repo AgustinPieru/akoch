@@ -1,4 +1,4 @@
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 
 export interface WhatsAppStatus {
@@ -8,15 +8,21 @@ export interface WhatsAppStatus {
   loadingMessage: string;
 }
 
-// Solo lee el cache — el SSE en App.tsx lo mantiene actualizado sin polling
+const TRANSITIONAL = new Set(['initializing', 'loading', 'qr_pending']);
+
 export function useWhatsAppStatus() {
-  return useQuery<WhatsAppStatus>({
+  const { data } = useQuery<WhatsAppStatus>({
     queryKey: ['whatsapp-status'],
     queryFn: () => api.get('/notifications/whatsapp/status').then((r) => r.data),
-    staleTime: Infinity,   // nunca re-fetches por cuenta propia
-    refetchOnWindowFocus: false,
-    refetchOnMount: false, // si el cache existe, no vuelve a pedir
+    staleTime: 10_000,
+    refetchOnWindowFocus: true,
+    // Polling de respaldo cuando está en transición (SSE puede caerse)
+    refetchInterval: (query) => {
+      const status = query.state.data?.status;
+      return status && TRANSITIONAL.has(status) ? 4000 : false;
+    },
   });
+  return { data };
 }
 
 export function useWhatsAppQr() {
@@ -28,14 +34,22 @@ export function useWhatsAppQr() {
 }
 
 export function useInitWhatsApp() {
+  const qc = useQueryClient();
   return useMutation({
     mutationFn: () => api.post('/notifications/whatsapp/init').then((r) => r.data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['whatsapp-status'] });
+    },
   });
 }
 
 export function useDisconnectWhatsApp() {
+  const qc = useQueryClient();
   return useMutation({
     mutationFn: () => api.post('/notifications/whatsapp/disconnect').then((r) => r.data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['whatsapp-status'] });
+    },
   });
 }
 
