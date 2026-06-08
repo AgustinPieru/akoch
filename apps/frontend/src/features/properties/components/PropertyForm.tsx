@@ -24,6 +24,7 @@ const PAID_BY = [
   { value: 'OWNER', label: 'Propietario' },
   { value: 'AGENCY', label: 'Inmobiliaria' },
   { value: 'SHARED', label: 'Compartido' },
+  { value: 'N_A', label: 'No tiene' },
 ];
 
 type OwnerOption = {
@@ -137,7 +138,7 @@ export default function PropertyForm({ existingOwners = [] }: Props) {
       </Typography>
       <Grid container spacing={2} mb={3}>
         {[
-          { field: 'ablPaidBy', label: 'ABL' },
+          { field: 'ablPaidBy', label: 'TGI' },
           { field: 'ordinaryExpensesPaidBy', label: 'Expensas ordinarias' },
           { field: 'extraordinaryExpensesPaidBy', label: 'Expensas extraordinarias' },
           { field: 'gasPaidBy', label: 'Gas' },

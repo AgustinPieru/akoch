@@ -29,7 +29,7 @@ const TYPE_LABELS: Record<string, string> = {
 };
 
 const PAID_BY_LABELS: Record<string, string> = {
-  TENANT: 'Inquilino', OWNER: 'Propietario', AGENCY: 'Inmobiliaria', SHARED: 'Compartido',
+  TENANT: 'Inquilino', OWNER: 'Propietario', AGENCY: 'Inmobiliaria', SHARED: 'Compartido', N_A: 'No tiene',
 };
 
 function InfoRow({ label, value }: { label: string; value?: string | null }) {
@@ -157,7 +157,7 @@ export default function PropertyDetailPage() {
               <Divider sx={{ mb: 2 }} />
               <Grid container spacing={0}>
                 {[
-                  { label: 'ABL', value: property.ablPaidBy },
+                  { label: 'TGI', value: property.ablPaidBy },
                   { label: 'Expensas ordinarias', value: property.ordinaryExpensesPaidBy },
                   { label: 'Expensas extraordinarias', value: property.extraordinaryExpensesPaidBy },
                   { label: 'Gas', value: property.gasPaidBy },

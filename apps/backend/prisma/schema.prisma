@@ -61,6 +61,7 @@ enum PaidBy {
   OWNER
   TENANT
   SHARED
+  N_A
 }
 
 enum PhotoType {
