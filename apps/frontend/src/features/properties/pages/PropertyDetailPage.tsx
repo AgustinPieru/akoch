@@ -47,12 +47,11 @@ function PropertyEditForm({ property, onSave, onCancel, isPending }: {
   onCancel: () => void;
   isPending: boolean;
 }) {
-  const existingOwners = property.owners.map(({ owner }) => owner);
   const methods = useForm({
     defaultValues: {
       ...property,
-      owners: property.owners.map(({ owner, percentage }: { owner: { id: number }; percentage: number }) => ({
-        ownerId: owner.id,
+      owners: property.owners.map(({ owner, percentage }: { owner: any; percentage: number }) => ({
+        owner,
         percentage,
       })),
     },
@@ -66,7 +65,7 @@ function PropertyEditForm({ property, onSave, onCancel, isPending }: {
       <FormProvider {...methods}>
         <Card>
           <CardContent sx={{ p: 3 }}>
-            <PropertyForm existingOwners={existingOwners} />
+            <PropertyForm />
             <Box display="flex" justifyContent="flex-end" gap={2} mt={3}>
               <Button onClick={onCancel} disabled={isPending}>Cancelar</Button>
               <Button variant="contained" onClick={methods.handleSubmit(onSave)} disabled={isPending}>
@@ -97,8 +96,15 @@ export default function PropertyDetailPage() {
     property.apartment && `Dto ${property.apartment}`,
   ].filter(Boolean).join(' ');
 
-  const handleSave = async (data: Record<string, unknown>) => {
-    await updateProperty(data as any);
+  const handleSave = async (data: any) => {
+    const payload = {
+      ...data,
+      owners: (data.owners ?? []).map(({ owner, percentage }: any) => ({
+        ownerId: owner?.id,
+        percentage,
+      })),
+    };
+    await updateProperty(payload as any);
     setEditing(false);
   };
 
@@ -160,6 +166,7 @@ export default function PropertyDetailPage() {
                   { label: 'TGI', value: property.ablPaidBy },
                   { label: 'Expensas ordinarias', value: property.ordinaryExpensesPaidBy },
                   { label: 'Expensas extraordinarias', value: property.extraordinaryExpensesPaidBy },
+                  { label: 'API', value: property.apiPaidBy },
                   { label: 'Gas', value: property.gasPaidBy },
                   { label: 'Electricidad', value: property.electricityPaidBy },
                   { label: 'Agua', value: property.waterPaidBy },

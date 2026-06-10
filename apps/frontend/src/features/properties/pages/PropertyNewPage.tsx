@@ -14,6 +14,7 @@ export default function PropertyNewPage() {
       ablPaidBy: 'TENANT',
       ordinaryExpensesPaidBy: 'TENANT',
       extraordinaryExpensesPaidBy: 'TENANT',
+      apiPaidBy: 'TENANT',
       gasPaidBy: 'TENANT',
       electricityPaidBy: 'TENANT',
       waterPaidBy: 'TENANT',
@@ -22,9 +23,16 @@ export default function PropertyNewPage() {
   });
   const { mutateAsync, isPending, error } = useCreateProperty();
 
-  const onSubmit = async (data: Record<string, unknown>) => {
+  const onSubmit = async (data: any) => {
     try {
-      const property = await mutateAsync(data);
+      const payload = {
+        ...data,
+        owners: (data.owners ?? []).map(({ owner, percentage }: any) => ({
+          ownerId: owner?.id,
+          percentage,
+        })),
+      };
+      const property = await mutateAsync(payload);
       navigate(ROUTES.PROPERTY_DETAIL((property as any).id));
     } catch {
       // error shown via Alert

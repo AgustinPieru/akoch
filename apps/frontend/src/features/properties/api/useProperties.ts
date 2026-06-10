@@ -26,6 +26,7 @@ export interface Property {
   gasPaidBy: string;
   electricityPaidBy: string;
   waterPaidBy: string;
+  apiPaidBy: string;
   hasMortgage: boolean;
   hasLien: boolean;
   notes?: string;

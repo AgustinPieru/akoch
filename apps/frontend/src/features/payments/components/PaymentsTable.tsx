@@ -55,7 +55,10 @@ export default function PaymentsTable({ payments, currency, hideContext = false 
       : `$${Number(n).toLocaleString('es-AR', { minimumFractionDigits: 2 })}`;
   };
 
-  const formatDate = (s: string) => new Date(s).toLocaleDateString('es-AR');
+  const formatDate = (s: string) => {
+    const [year, month, day] = s.substring(0, 10).split('-').map(Number);
+    return new Date(year, month - 1, day).toLocaleDateString('es-AR');
+  };
 
   return (
     <>

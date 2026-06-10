@@ -262,6 +262,7 @@ model Property {
   gasPaidBy                   PaidBy          @default(TENANT) @map("gas_paid_by")
   electricityPaidBy           PaidBy          @default(TENANT) @map("electricity_paid_by")
   waterPaidBy                 PaidBy          @default(TENANT) @map("water_paid_by")
+  apiPaidBy                   PaidBy          @default(TENANT) @map("api_paid_by")
   ablAmount                   Float?          @map("abl_amount")
   monthlyExpensesEstimate     Float?          @map("monthly_expenses_estimate")
   hasMortgage                 Boolean         @default(false) @map("has_mortgage")

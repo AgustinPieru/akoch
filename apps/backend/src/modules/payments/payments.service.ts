@@ -113,17 +113,20 @@ export async function generatePaymentsForContract(contractId: number) {
   if (contract.status === 'DRAFT') throw { status: 409, message: 'El contrato debe estar activo', code: 'INVALID_STATUS' };
 
   const periods: { contractId: number; periodYear: number; periodMonth: number; expectedAmount: number; dueDate: Date; status: PaymentStatus }[] = [];
-  const start = new Date(contract.startDate);
+  const startUtc = contract.startDate;
+  const startYear = startUtc.getUTCFullYear();
+  const startMonth = startUtc.getUTCMonth();
 
   for (let i = 0; i < contract.durationMonths; i++) {
-    const d = new Date(start);
-    d.setMonth(d.getMonth() + i);
-    const dueDate = new Date(d.getFullYear(), d.getMonth(), 10); // vence el día 10
+    const totalMonths = startMonth + i;
+    const periodYear = startYear + Math.floor(totalMonths / 12);
+    const periodMonth = (totalMonths % 12) + 1;
+    const dueDate = new Date(Date.UTC(periodYear, periodMonth - 1, 10));
 
     periods.push({
       contractId,
-      periodYear: d.getFullYear(),
-      periodMonth: d.getMonth() + 1,
+      periodYear,
+      periodMonth,
       expectedAmount: contract.currentAmount,
       dueDate,
       status: 'PENDING',

@@ -43,23 +43,48 @@ function getOwnerLabel(o: OwnerOption) {
   return o.cuit ? `${name} (${o.cuit})` : name;
 }
 
-interface Props {
-  existingOwners?: OwnerOption[];
+// Isolated per-row autocomplete: each row has its own search state
+function OwnerAutocomplete({ value, onChange }: { value: OwnerOption | null; onChange: (v: OwnerOption | null) => void }) {
+  const [search, setSearch] = useState('');
+  const { data, isLoading } = useOwners({ search, limit: 30 });
+
+  const options: OwnerOption[] = [
+    ...(value ? [value] : []),
+    ...(data?.data ?? []).filter((o) => !value || o.id !== value.id),
+  ];
+
+  return (
+    <Autocomplete
+      sx={{ flex: 1 }}
+      options={options}
+      value={value}
+      getOptionLabel={(o) => getOwnerLabel(o as OwnerOption)}
+      isOptionEqualToValue={(opt, val) => opt.id === val.id}
+      loading={isLoading}
+      onInputChange={(_, v) => setSearch(v)}
+      onChange={(_, v) => onChange(v ? (v as OwnerOption) : null)}
+      renderInput={(params) => (
+        <TextField
+          {...params}
+          label="Propietario *"
+          InputProps={{
+            ...params.InputProps,
+            endAdornment: (
+              <>
+                {isLoading && <CircularProgress size={16} />}
+                {params.InputProps.endAdornment}
+              </>
+            ),
+          }}
+        />
+      )}
+    />
+  );
 }
 
-export default function PropertyForm({ existingOwners = [] }: Props) {
-  const { register, control, watch, formState: { errors } } = useFormContext();
+export default function PropertyForm() {
+  const { register, control, formState: { errors } } = useFormContext<Record<string, any>>();
   const { fields, append, remove } = useFieldArray({ control, name: 'owners' });
-  const [ownerSearch, setOwnerSearch] = useState('');
-
-  const { data: ownersData, isLoading: loadingOwners } = useOwners({ search: ownerSearch, limit: 30 });
-  const searchResults = ownersData?.data ?? [];
-
-  // Merge search results with pre-loaded owners (deduplicate by id)
-  const allOwners: OwnerOption[] = [
-    ...existingOwners,
-    ...searchResults.filter((o) => !existingOwners.some((e) => e.id === o.id)),
-  ];
 
   return (
     <Box>
@@ -141,6 +166,7 @@ export default function PropertyForm({ existingOwners = [] }: Props) {
           { field: 'ablPaidBy', label: 'TGI' },
           { field: 'ordinaryExpensesPaidBy', label: 'Expensas ordinarias' },
           { field: 'extraordinaryExpensesPaidBy', label: 'Expensas extraordinarias' },
+          { field: 'apiPaidBy', label: 'API' },
           { field: 'gasPaidBy', label: 'Gas' },
           { field: 'electricityPaidBy', label: 'Electricidad' },
           { field: 'waterPaidBy', label: 'Agua' },
@@ -167,45 +193,21 @@ export default function PropertyForm({ existingOwners = [] }: Props) {
         <Typography variant="subtitle2" color="text.secondary">
           Propietarios (la suma de porcentajes debe ser 100%)
         </Typography>
-        <Button size="small" startIcon={<Add />} onClick={() => append({ ownerId: null, percentage: 100 })}>
+        <Button size="small" startIcon={<Add />} onClick={() => append({ owner: null, percentage: 100 })}>
           Agregar
         </Button>
       </Box>
 
       {fields.map((field, index) => {
-        const currentId = watch(`owners.${index}.ownerId`);
-        const currentValue = allOwners.find((o) => o.id === currentId) ?? null;
-
         return (
           <Box key={field.id} display="flex" gap={2} mb={2} alignItems="flex-start">
             <Controller
-              name={`owners.${index}.ownerId`}
+              name={`owners.${index}.owner`}
               control={control}
               render={({ field: f }) => (
-                <Autocomplete
-                  sx={{ flex: 1 }}
-                  options={allOwners}
-                  value={currentValue}
-                  getOptionLabel={(o) => getOwnerLabel(o as OwnerOption)}
-                  isOptionEqualToValue={(opt, val) => opt.id === val.id}
-                  loading={loadingOwners}
-                  onInputChange={(_, v) => setOwnerSearch(v)}
-                  onChange={(_, v) => f.onChange(v ? (v as OwnerOption).id : null)}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      label="Propietario *"
-                      InputProps={{
-                        ...params.InputProps,
-                        endAdornment: (
-                          <>
-                            {loadingOwners && <CircularProgress size={16} />}
-                            {params.InputProps.endAdornment}
-                          </>
-                        ),
-                      }}
-                    />
-                  )}
+                <OwnerAutocomplete
+                  value={f.value ?? null}
+                  onChange={(v) => f.onChange(v)}
                 />
               )}
             />
