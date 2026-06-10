@@ -16,6 +16,7 @@ import {
   ExpiringContract,
 } from '../api/useReports';
 import { useOwners } from '@/features/owners/api/useOwners';
+import { fmtDate } from '@/lib/dateUtils';
 
 const MONTHS_LONG = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 const MONTHS_SHORT = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
@@ -134,7 +135,7 @@ function PaymentsPeriodTab() {
                         <TableCell align="right">
                           {p.paidAmount != null ? formatMoney(p.paidAmount, p.contract.currency) : '—'}
                         </TableCell>
-                        <TableCell>{new Date(p.dueDate).toLocaleDateString('es-AR')}</TableCell>
+                        <TableCell>{fmtDate(p.dueDate)}</TableCell>
                         <TableCell><Chip label={st.label} color={st.color} size="small" /></TableCell>
                       </TableRow>
                     );
@@ -297,7 +298,7 @@ function ExpiringContractsTab() {
                           <Typography variant="body2">{ownerName(c)}</Typography>
                           <Typography variant="caption" color="text.secondary">{c.property.owners[0]?.owner.phone || ''}</Typography>
                         </TableCell>
-                        <TableCell>{new Date(c.endDate).toLocaleDateString('es-AR')}</TableCell>
+                        <TableCell>{fmtDate(c.endDate)}</TableCell>
                         <TableCell align="right">
                           <Chip label={`${c.daysUntilExpiry}d`} color={urgencyColor} size="small" />
                         </TableCell>
@@ -387,7 +388,7 @@ function ExpensesPeriodTab() {
                 ) : (
                   data.expenses.map((e) => (
                     <TableRow key={e.id}>
-                      <TableCell>{new Date(e.date).toLocaleDateString('es-AR')}</TableCell>
+                      <TableCell>{fmtDate(e.date)}</TableCell>
                       <TableCell>
                         <Typography variant="body2">{e.property.street} {e.property.number}</Typography>
                         <Typography variant="caption" color="text.secondary">{e.property.city}</Typography>
@@ -530,7 +531,7 @@ function VacancyTab() {
                       <TableCell>
                         {lastContract ? (
                           <Typography variant="caption" color="text.secondary">
-                            Venció {new Date(lastContract.endDate).toLocaleDateString('es-AR')}
+                            Venció {fmtDate(lastContract.endDate)}
                           </Typography>
                         ) : '—'}
                       </TableCell>
@@ -595,7 +596,7 @@ function AdjustmentsTab() {
                   const tName = t ? (t.type === 'PERSONA_JURIDICA' ? t.businessName : [t.firstName, t.lastName].filter(Boolean).join(' ')) ?? '—' : '—';
                   return (
                     <TableRow key={adj.id}>
-                      <TableCell>{new Date(adj.appliedAt).toLocaleDateString('es-AR')}</TableCell>
+                      <TableCell>{fmtDate(adj.appliedAt)}</TableCell>
                       <TableCell>
                         <Typography variant="body2">{adj.contract.property.street} {adj.contract.property.number}</Typography>
                         <Typography variant="caption" color="text.secondary">{adj.contract.property.city}</Typography>

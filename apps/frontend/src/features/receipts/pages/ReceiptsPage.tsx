@@ -6,6 +6,7 @@ import {
 } from '@mui/material';
 import { PictureAsPdf, Search } from '@mui/icons-material';
 import api from '@/lib/axios';
+import { fmtDate } from '@/lib/dateUtils';
 import { usePayments, Payment } from '@/features/payments/api/usePayments';
 import { useSettlements, Settlement } from '@/features/settlements/api/useSettlements';
 
@@ -148,7 +149,7 @@ function PaymentReceiptsTab() {
                         {p.paidAmount != null ? formatMoney(p.paidAmount, currency) : '—'}
                       </TableCell>
                       <TableCell>
-                        {p.paidAt ? new Date(p.paidAt).toLocaleDateString('es-AR') : '—'}
+                        {p.paidAt ? fmtDate(p.paidAt) : '—'}
                       </TableCell>
                       <TableCell>
                         <Typography variant="body2" color="text.secondary">

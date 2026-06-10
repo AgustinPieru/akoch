@@ -7,6 +7,7 @@ import {
 import { Add, Edit, Delete, Search } from '@mui/icons-material';
 import { useExpenses, useDeleteExpense, Expense } from '../api/useExpenses';
 import ExpenseFormDialog from '../components/ExpenseFormDialog';
+import { fmtDate } from '@/lib/dateUtils';
 
 const CATEGORY_LABELS: Record<string, string> = {
   EXPENSAS: 'Expensas', ABL: 'ABL', GAS: 'Gas', ELECTRICIDAD: 'Electricidad',
@@ -53,7 +54,7 @@ export default function ExpensesListPage() {
       ? `USD ${Number(amount).toLocaleString('es-AR', { minimumFractionDigits: 2 })}`
       : `$${Number(amount).toLocaleString('es-AR', { minimumFractionDigits: 2 })}`;
 
-  const formatDate = (s: string) => new Date(s).toLocaleDateString('es-AR');
+  const formatDate = fmtDate;
 
   const handleDelete = async (id: number) => {
     if (confirm('¿Eliminar este gasto?')) {

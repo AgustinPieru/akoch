@@ -8,6 +8,7 @@ import { useForm, useWatch, Controller } from 'react-hook-form';
 import CurrencyField from '@/components/CurrencyField';
 import api from '@/lib/axios';
 import { Payment, useRegisterPayment } from '../api/usePayments';
+import { fmtDate } from '@/lib/dateUtils';
 
 const MONTHS = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 const METHODS = [
@@ -138,7 +139,7 @@ export default function RegisterPaymentDialog({ payment, onClose }: Props) {
         <DialogContent>
           <Typography variant="body2" color="text.secondary" mb={2}>
             Monto esperado: <strong>{formatMoney(payment.expectedAmount)}</strong>
-            {' · '}Vencía: <strong>{new Date(payment.dueDate).toLocaleDateString('es-AR')}</strong>
+            {' · '}Vencía: <strong>{fmtDate(payment.dueDate)}</strong>
           </Typography>
           <Grid container spacing={2}>
             <Grid item xs={12} sm={6}>

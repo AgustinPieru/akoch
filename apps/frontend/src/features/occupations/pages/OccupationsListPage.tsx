@@ -12,6 +12,7 @@ import {
 import { useOccupations } from '../api/useOccupations';
 import { ROUTES } from '@/router/routes';
 import OccupationFormDialog from '../components/OccupationFormDialog';
+import { fmtDate } from '@/lib/dateUtils';
 
 const REASON_LABELS: Record<string, string> = {
   EXPIRED_CONTRACT: 'Contrato vencido',
@@ -126,7 +127,7 @@ export default function OccupationsListPage() {
                     </TableCell>
                     <TableCell>
                       <Typography variant="body2">
-                        {new Date(o.startDate).toLocaleDateString('es-AR')}
+                        {fmtDate(o.startDate)}
                       </Typography>
                     </TableCell>
                     <TableCell>

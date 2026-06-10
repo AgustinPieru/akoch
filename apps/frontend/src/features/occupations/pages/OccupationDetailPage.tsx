@@ -8,6 +8,7 @@ import {
 import {
   ArrowBack, CheckCircle, ExitToApp, SwapHoriz,
 } from '@mui/icons-material';
+import { fmtDate } from '@/lib/dateUtils';
 import { useOccupation, useCloseOccupation, useConvertOccupation } from '../api/useOccupations';
 import { ROUTES } from '@/router/routes';
 
@@ -127,8 +128,8 @@ export default function OccupationDetailPage() {
               <InfoRow label="Nombre" value={occ.occupantName} />
               <InfoRow label="Teléfono" value={occ.occupantPhone} />
               <InfoRow label="Motivo" value={REASON_LABELS[occ.reason] || occ.reason} />
-              <InfoRow label="Desde" value={new Date(occ.startDate).toLocaleDateString('es-AR')} />
-              {occ.endDate && <InfoRow label="Hasta" value={new Date(occ.endDate).toLocaleDateString('es-AR')} />}
+              <InfoRow label="Desde" value={fmtDate(occ.startDate)} />
+              {occ.endDate && <InfoRow label="Hasta" value={fmtDate(occ.endDate)} />}
               {occ.informalAmount && (
                 <InfoRow
                   label="Monto acordado"
@@ -150,7 +151,7 @@ export default function OccupationDetailPage() {
                 <InfoRow label="Estado" value={occ.convertedToContract.status} />
                 <InfoRow
                   label="Vigencia"
-                  value={`${new Date(occ.convertedToContract.startDate).toLocaleDateString('es-AR')} — ${new Date(occ.convertedToContract.endDate).toLocaleDateString('es-AR')}`}
+                  value={`${fmtDate(occ.convertedToContract.startDate)} — ${fmtDate(occ.convertedToContract.endDate)}`}
                 />
                 <Button
                   size="small"

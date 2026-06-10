@@ -7,6 +7,7 @@ import {
 } from '@mui/material';
 import { Add, Search } from '@mui/icons-material';
 import { useContracts } from '../api/useContracts';
+import { fmtDate } from '@/lib/dateUtils';
 import { ROUTES } from '@/router/routes';
 
 const STATUS_LABELS: Record<string, { label: string; color: 'default' | 'warning' | 'success' | 'error' | 'info' }> = {
@@ -39,7 +40,7 @@ export default function ContractsListPage() {
     limit: rowsPerPage,
   });
 
-  const formatDate = (s: string) => new Date(s).toLocaleDateString('es-AR');
+  const formatDate = fmtDate;
 
   const getTenantName = (tenants: { isPrimary: boolean; tenant: { firstName?: string; lastName?: string; businessName?: string; type: string } }[]) => {
     const primary = tenants.find((t) => t.isPrimary) || tenants[0];

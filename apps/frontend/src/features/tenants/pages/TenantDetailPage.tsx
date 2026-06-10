@@ -7,6 +7,7 @@ import {
 import { ArrowBack, Edit } from '@mui/icons-material';
 import { useTenant, useUpdateTenant, useTenantAccountStatement } from '../api/useTenants';
 import { ROUTES } from '@/router/routes';
+import { fmtDate } from '@/lib/dateUtils';
 import { useState } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import TenantForm from '../components/TenantForm';
@@ -105,7 +106,7 @@ function AccountStatementSection({ tenantId }: { tenantId: number }) {
                     <Typography variant="body2">{p.contract.property.street} {p.contract.property.number}</Typography>
                     <Typography variant="caption" color="text.secondary">{p.contract.property.city}</Typography>
                   </TableCell>
-                  <TableCell>{new Date(p.dueDate).toLocaleDateString('es-AR')}</TableCell>
+                  <TableCell>{fmtDate(p.dueDate)}</TableCell>
                   <TableCell align="right">{fmt(p.expectedAmount)}</TableCell>
                   <TableCell align="right">{p.paidAmount != null ? fmt(p.paidAmount) : '—'}</TableCell>
                   <TableCell align="right">
@@ -220,7 +221,7 @@ export default function TenantDetailPage() {
                 <>
                   <InfoRow label="DNI" value={tenant.dni} />
                   <InfoRow label="CUIT / CUIL" value={tenant.cuit} />
-                  <InfoRow label="Fecha de nacimiento" value={tenant.birthDate ? new Date(tenant.birthDate).toLocaleDateString('es-AR') : undefined} />
+                  <InfoRow label="Fecha de nacimiento" value={tenant.birthDate ? fmtDate(tenant.birthDate) : undefined} />
                 </>
               ) : (
                 <InfoRow label="CUIT" value={tenant.cuit} />

@@ -6,6 +6,7 @@ import {
 } from '@mui/material';
 import { ArrowBack, Send, CheckCircle, PictureAsPdf, Refresh } from '@mui/icons-material';
 import api from '@/lib/axios';
+import { fmtDate } from '@/lib/dateUtils';
 import { useSettlement, useMarkSettlementPaid, useGenerateSettlement } from '../api/useSettlements';
 import SendSettlementDialog from '../components/SendSettlementDialog';
 import { ROUTES } from '@/router/routes';
@@ -80,7 +81,7 @@ export default function SettlementDetailPage() {
       ? `USD ${Number(n).toLocaleString('es-AR', { minimumFractionDigits: 2 })}`
       : `$${Number(n).toLocaleString('es-AR', { minimumFractionDigits: 2 })}`;
 
-  const formatDate = (s: string) => new Date(s).toLocaleDateString('es-AR');
+  const formatDate = fmtDate;
 
   const primaryOwner = settlement.property.owners[0]?.owner;
   const ownerName = primaryOwner
