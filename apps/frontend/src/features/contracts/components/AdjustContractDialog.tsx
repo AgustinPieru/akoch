@@ -81,9 +81,10 @@ export default function AdjustContractDialog({ contract, onClose }: Props) {
         <DialogContent>
           <Alert severity="info" sx={{ mb: 2 }}>
             Índice: <strong>{INDEX_LABELS[contract.indexType] || contract.indexType}</strong>
-            {contract.nextAdjustmentDate && (
-              <> · Próximo ajuste: <strong>{new Date(contract.nextAdjustmentDate).toLocaleDateString('es-AR')}</strong></>
-            )}
+            {contract.nextAdjustmentDate && (() => {
+              const [y, m, d] = contract.nextAdjustmentDate!.substring(0, 10).split('-').map(Number);
+              return <> · Próximo ajuste: <strong>{new Date(y, m - 1, d).toLocaleDateString('es-AR')}</strong></>;
+            })()}
           </Alert>
 
           {contract.indexType !== 'FREE' && (

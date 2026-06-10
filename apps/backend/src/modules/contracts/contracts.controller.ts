@@ -42,6 +42,15 @@ export async function createContract(req: AuthRequest, res: Response): Promise<v
   }
 }
 
+export async function updateContract(req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const contract = await service.updateContract(parseInt(req.params.id), req.body);
+    res.json(contract);
+  } catch (err: any) {
+    res.status(err.status || 500).json({ error: err.message, code: err.code });
+  }
+}
+
 export async function activateContract(req: AuthRequest, res: Response): Promise<void> {
   try {
     const contract = await service.activateContract(parseInt(req.params.id));

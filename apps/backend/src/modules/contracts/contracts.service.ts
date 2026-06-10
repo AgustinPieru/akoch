@@ -94,9 +94,10 @@ export async function createContract(input: CreateContractInput) {
     throw { status: 400, message: 'Debe designar un inquilino titular', code: 'NO_PRIMARY_TENANT' };
   }
 
-  const startDate = new Date(input.startDate);
+  const startDate = new Date(input.startDate + 'T00:00:00.000Z');
   const endDate = new Date(startDate);
-  endDate.setMonth(endDate.getMonth() + input.durationMonths);
+  endDate.setUTCMonth(endDate.getUTCMonth() + input.durationMonths);
+  endDate.setUTCDate(endDate.getUTCDate() - 1);
 
   const nextAdjustmentDate =
     input.indexType !== 'NONE'
@@ -250,9 +251,10 @@ export async function renewContract(id: number, input: RenewContractInput) {
     throw { status: 409, message: 'Solo se pueden renovar contratos activos o vencidos', code: 'INVALID_STATUS' };
   }
 
-  const startDate = new Date(input.startDate);
+  const startDate = new Date(input.startDate + 'T00:00:00.000Z');
   const endDate = new Date(startDate);
-  endDate.setMonth(endDate.getMonth() + input.durationMonths);
+  endDate.setUTCMonth(endDate.getUTCMonth() + input.durationMonths);
+  endDate.setUTCDate(endDate.getUTCDate() - 1);
 
   const indexType = (input.indexType ?? contract.indexType) as IndexType;
   const updateFrequency = (input.updateFrequency ?? contract.updateFrequency) as UpdateFrequency;
@@ -298,6 +300,73 @@ export async function renewContract(id: number, input: RenewContractInput) {
   ]);
 
   return newContract;
+}
+
+export interface UpdateContractInput {
+  startDate?: string;
+  durationMonths?: number;
+  initialAmount?: number;
+  currency?: string;
+  indexType?: string;
+  updateFrequency?: string;
+  freePercentage?: number | null;
+  adminCommissionPct?: number;
+  initialCommission?: number | null;
+  specialClauses?: string | null;
+  tenants?: { tenantId: number; isPrimary: boolean }[];
+}
+
+export async function updateContract(id: number, input: UpdateContractInput) {
+  const contract = await getContractById(id);
+
+  if (contract.status !== 'DRAFT') {
+    throw { status: 409, message: 'Solo se pueden editar contratos en borrador', code: 'INVALID_STATUS' };
+  }
+
+  const startDateStr = input.startDate ?? contract.startDate.toISOString().substring(0, 10);
+  const startDate = new Date(startDateStr + 'T00:00:00.000Z');
+  const months = input.durationMonths !== undefined ? input.durationMonths : contract.durationMonths;
+  const endDate = new Date(startDate);
+  endDate.setUTCMonth(endDate.getUTCMonth() + months);
+  endDate.setUTCDate(endDate.getUTCDate() - 1);
+
+  const indexType = (input.indexType ?? contract.indexType) as IndexType;
+  const updateFrequency = (input.updateFrequency ?? contract.updateFrequency) as UpdateFrequency;
+  const nextAdjustmentDate = indexType !== 'NONE'
+    ? calculateNextAdjustmentDate(startDate, null, updateFrequency)
+    : null;
+
+  if (input.tenants !== undefined) {
+    const hasPrimary = input.tenants.some((t) => t.isPrimary);
+    if (!hasPrimary) {
+      throw { status: 400, message: 'Debe designar un inquilino titular', code: 'NO_PRIMARY_TENANT' };
+    }
+    await prisma.$transaction([
+      prisma.contractTenant.deleteMany({ where: { contractId: id } }),
+      prisma.contractTenant.createMany({
+        data: input.tenants.map((t) => ({ contractId: id, tenantId: t.tenantId, isPrimary: t.isPrimary })),
+      }),
+    ]);
+  }
+
+  return prisma.contract.update({
+    where: { id },
+    data: {
+      startDate,
+      endDate,
+      durationMonths: months,
+      ...(input.initialAmount !== undefined && { initialAmount: input.initialAmount, currentAmount: input.initialAmount }),
+      ...(input.currency !== undefined && { currency: input.currency as any }),
+      indexType,
+      updateFrequency,
+      ...(input.freePercentage !== undefined && { freePercentage: input.freePercentage }),
+      ...(input.adminCommissionPct !== undefined && { adminCommissionPct: input.adminCommissionPct }),
+      ...(input.initialCommission !== undefined && { initialCommission: input.initialCommission }),
+      ...(input.specialClauses !== undefined && { specialClauses: input.specialClauses }),
+      nextAdjustmentDate,
+    },
+    include: contractInclude,
+  });
 }
 
 export async function terminateContract(id: number, reason: string) {

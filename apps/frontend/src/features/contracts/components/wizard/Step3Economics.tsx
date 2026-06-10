@@ -35,9 +35,11 @@ export default function Step3Economics() {
 
   const endDate = (() => {
     if (!startDate || !durationMonths) return '';
-    const d = new Date(startDate);
-    d.setMonth(d.getMonth() + parseInt(durationMonths));
-    return d.toISOString().split('T')[0];
+    const [y, m, d] = startDate.split('-').map(Number);
+    const date = new Date(y, m - 1, d);
+    date.setMonth(date.getMonth() + parseInt(durationMonths));
+    date.setDate(date.getDate() - 1);
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
   })();
 
   return (

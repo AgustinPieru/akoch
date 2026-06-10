@@ -45,11 +45,18 @@ function Row({ label, value }: { label: string; value: string }) {
 export default function Step4Summary({ propertyId, tenants, formValues }: Props) {
   const { data: property } = useProperty(propertyId);
 
+  const localDateStr = (s: string) => {
+    const [y, m, d] = s.split('-').map(Number);
+    return new Date(y, m - 1, d).toLocaleDateString('es-AR');
+  };
+
   const endDate = (() => {
     if (!formValues.startDate || !formValues.durationMonths) return '—';
-    const d = new Date(formValues.startDate);
-    d.setMonth(d.getMonth() + Number(formValues.durationMonths));
-    return d.toLocaleDateString('es-AR');
+    const [y, m, d] = formValues.startDate.split('-').map(Number);
+    const date = new Date(y, m - 1, d);
+    date.setMonth(date.getMonth() + Number(formValues.durationMonths));
+    date.setDate(date.getDate() - 1);
+    return date.toLocaleDateString('es-AR');
   })();
 
   const formatMoney = (n: number, currency: string) =>
@@ -93,7 +100,7 @@ export default function Step4Summary({ propertyId, tenants, formValues }: Props)
 
         <Grid item xs={12} md={6}>
           <Typography variant="subtitle2" color="text.secondary" gutterBottom>Condiciones</Typography>
-          <Row label="Inicio" value={formValues.startDate ? new Date(formValues.startDate).toLocaleDateString('es-AR') : '—'} />
+          <Row label="Inicio" value={formValues.startDate ? localDateStr(formValues.startDate) : '—'} />
           <Row label="Vencimiento" value={endDate} />
           <Row label="Duración" value={`${formValues.durationMonths} meses`} />
           <Divider sx={{ my: 1 }} />

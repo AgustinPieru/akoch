@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { body } from 'express-validator';
 import { authenticate } from '../../middleware/auth.middleware';
-import { activateContract, adjustContract, createContract, getContract, getContracts, terminateContract, finalizeContract, renewContract } from './contracts.controller';
+import { activateContract, adjustContract, createContract, getContract, getContracts, terminateContract, finalizeContract, renewContract, updateContract } from './contracts.controller';
 
 const router = Router();
 
@@ -22,6 +22,7 @@ router.post(
   createContract
 );
 
+router.patch('/:id', updateContract);
 router.post('/:id/activate', activateContract);
 
 router.get('/:id/index-preview', async (req, res, next) => {

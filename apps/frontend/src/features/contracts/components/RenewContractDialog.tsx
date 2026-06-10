@@ -36,11 +36,12 @@ export default function RenewContractDialog({ contract, onClose }: Props) {
   const navigate = useNavigate();
   const renew = useRenewContract();
 
-  const suggestedStart = new Date(contract.endDate);
-  suggestedStart.setDate(suggestedStart.getDate() + 1);
+  const [ey, em, ed] = contract.endDate.substring(0, 10).split('-').map(Number);
+  const suggestedStart = new Date(ey, em - 1, ed + 1);
+  const suggestedStartStr = `${suggestedStart.getFullYear()}-${String(suggestedStart.getMonth() + 1).padStart(2, '0')}-${String(suggestedStart.getDate()).padStart(2, '0')}`;
 
   const [form, setForm] = useState({
-    startDate: suggestedStart.toISOString().split('T')[0],
+    startDate: suggestedStartStr,
     durationMonths: String(contract.durationMonths),
     initialAmount: String(contract.currentAmount),
     currency: contract.currency,

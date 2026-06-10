@@ -5,10 +5,11 @@ import {
   Alert, Dialog, DialogTitle, DialogContent, DialogActions, TextField,
   Table, TableBody, TableCell, TableHead, TableRow,
 } from '@mui/material';
-import { ArrowBack, PlayArrow, Stop, EventNote, TrendingUp, CheckCircleOutline, Autorenew } from '@mui/icons-material';
+import { ArrowBack, PlayArrow, Stop, EventNote, TrendingUp, CheckCircleOutline, Autorenew, Edit } from '@mui/icons-material';
 import { useContract, useActivateContract, useTerminateContract, useFinalizeContract } from '../api/useContracts';
 import AdjustContractDialog from '../components/AdjustContractDialog';
 import RenewContractDialog from '../components/RenewContractDialog';
+import EditContractDialog from '../components/EditContractDialog';
 import { usePayments, useGeneratePayments } from '@/features/payments/api/usePayments';
 import PaymentsTable from '@/features/payments/components/PaymentsTable';
 import DocumentList from '@/features/uploads/components/DocumentList';
@@ -53,6 +54,7 @@ export default function ContractDetailPage() {
   const terminate = useTerminateContract();
   const finalize = useFinalizeContract();
 
+  const [editOpen, setEditOpen] = useState(false);
   const [terminateOpen, setTerminateOpen] = useState(false);
   const [terminateReason, setTerminateReason] = useState('');
   const [adjustOpen, setAdjustOpen] = useState(false);
@@ -66,7 +68,10 @@ export default function ContractDetailPage() {
   if (isError || !contract) return <Alert severity="error">No se pudo cargar el contrato.</Alert>;
 
   const st = STATUS_LABELS[contract.status] || { label: contract.status, color: 'default' as const };
-  const formatDate = (s: string) => new Date(s).toLocaleDateString('es-AR');
+  const formatDate = (s: string) => {
+    const [year, month, day] = s.substring(0, 10).split('-').map(Number);
+    return new Date(year, month - 1, day).toLocaleDateString('es-AR');
+  };
   const formatMoney = (n: number) =>
     contract.currency === 'USD'
       ? `USD ${Number(n).toLocaleString('es-AR', { minimumFractionDigits: 2 })}`
@@ -110,16 +115,27 @@ export default function ContractDetailPage() {
           severity="warning"
           sx={{ mb: 3 }}
           action={
-            <Button
-              size="small"
-              color="warning"
-              variant="contained"
-              startIcon={activate.isPending ? <CircularProgress size={14} /> : <PlayArrow />}
-              onClick={handleActivate}
-              disabled={activate.isPending}
-            >
-              Activar contrato
-            </Button>
+            <Box display="flex" gap={1}>
+              <Button
+                size="small"
+                color="warning"
+                variant="outlined"
+                startIcon={<Edit />}
+                onClick={() => setEditOpen(true)}
+              >
+                Editar
+              </Button>
+              <Button
+                size="small"
+                color="warning"
+                variant="contained"
+                startIcon={activate.isPending ? <CircularProgress size={14} /> : <PlayArrow />}
+                onClick={handleActivate}
+                disabled={activate.isPending}
+              >
+                Activar contrato
+              </Button>
+            </Box>
           }
         >
           Este contrato está en borrador. Al activarlo, la propiedad pasará a estado "Alquilada".
@@ -318,6 +334,10 @@ export default function ContractDetailPage() {
           <DocumentList entityType="contract" entityId={parseInt(id!)} />
         </Paper>
       </Box>
+
+      {editOpen && (
+        <EditContractDialog contract={contract} onClose={() => setEditOpen(false)} />
+      )}
 
       {adjustOpen && (
         <AdjustContractDialog contract={contract} onClose={() => setAdjustOpen(false)} />

@@ -70,6 +70,18 @@ export function useCreateContract() {
   });
 }
 
+export function useUpdateContract() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: Record<string, unknown> }) =>
+      api.patch(`/contracts/${id}`, data).then((r) => r.data),
+    onSuccess: (_data, { id }) => {
+      qc.invalidateQueries({ queryKey: ['contracts', id] });
+      qc.invalidateQueries({ queryKey: ['contracts'] });
+    },
+  });
+}
+
 export function useActivateContract() {
   const qc = useQueryClient();
   return useMutation({
