@@ -188,7 +188,13 @@ export async function activateContract(id: number) {
   return updated;
 }
 
-export async function applyAdjustment(id: number, percentage: number, indexValue?: number, notes?: string) {
+export async function applyAdjustment(
+  id: number,
+  percentage: number,
+  indexValue?: number,
+  notes?: string,
+  overrideAmount?: number,
+) {
   const contract = await getContractById(id);
 
   if (contract.status !== 'ACTIVE') {
@@ -199,7 +205,8 @@ export async function applyAdjustment(id: number, percentage: number, indexValue
   }
 
   const previousAmount = contract.currentAmount;
-  const newAmount = previousAmount * (1 + percentage / 100);
+  const computedAmount = previousAmount * (1 + percentage / 100);
+  const newAmount = overrideAmount && overrideAmount > 0 ? overrideAmount : computedAmount;
   const now = new Date();
   const nextAdjustmentDate = calculateNextAdjustmentDate(
     contract.startDate,

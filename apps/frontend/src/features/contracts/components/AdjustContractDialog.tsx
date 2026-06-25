@@ -1,12 +1,13 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField,
   Grid, Typography, Box, CircularProgress, Alert, InputAdornment, Tooltip,
 } from '@mui/material';
 import { Download } from '@mui/icons-material';
-import { useForm, useWatch } from 'react-hook-form';
+import { useForm, useWatch, Controller } from 'react-hook-form';
 import { Contract } from '../api/useContracts';
 import { useAdjustContract } from '../api/useContracts';
+import CurrencyField from '@/components/CurrencyField';
 import api from '@/lib/axios';
 
 const INDEX_LABELS: Record<string, string> = {
@@ -19,6 +20,7 @@ interface FormValues {
   percentage: number;
   indexValue: string;
   notes: string;
+  newAmount: number;
 }
 
 interface Props {
@@ -36,12 +38,24 @@ export default function AdjustContractDialog({ contract, onClose }: Props) {
       percentage: contract.indexType === 'FREE' ? (contract.freePercentage ?? 0) : 0,
       indexValue: '',
       notes: '',
+      newAmount: contract.currentAmount,
     },
   });
 
   const percentage = useWatch({ control, name: 'percentage' });
+  const newAmount = useWatch({ control, name: 'newAmount' });
   const currentAmount = contract.currentAmount;
-  const newAmount = currentAmount * (1 + Number(percentage) / 100);
+
+  // Recalcula el monto sugerido cada vez que cambia el porcentaje; el usuario
+  // puede después editarlo a mano para redondear (frecuente en pagos en efectivo).
+  const lastPercentage = useRef(percentage);
+  useEffect(() => {
+    if (percentage !== lastPercentage.current) {
+      lastPercentage.current = percentage;
+      const computed = currentAmount * (1 + Number(percentage) / 100);
+      setValue('newAmount', Math.round(computed * 100) / 100);
+    }
+  }, [percentage, currentAmount, setValue]);
 
   const formatMoney = (n: number) =>
     contract.currency === 'USD'
@@ -69,6 +83,7 @@ export default function AdjustContractDialog({ contract, onClose }: Props) {
         percentage: Number(values.percentage),
         indexValue: values.indexValue ? Number(values.indexValue) : undefined,
         notes: values.notes || undefined,
+        newAmount: Number(values.newAmount),
       },
     });
     onClose();
@@ -144,25 +159,47 @@ export default function AdjustContractDialog({ contract, onClose }: Props) {
           </Grid>
 
           {/* Preview */}
-          <Box mt={2.5} p={2} bgcolor="grey.50" borderRadius={1}>
+          <Box mt={2.5} p={2.5} bgcolor="grey.50" borderRadius={1}>
             <Typography variant="body2" color="text.secondary" gutterBottom>Vista previa del ajuste</Typography>
-            <Box display="flex" justifyContent="space-between" alignItems="center">
-              <Box>
-                <Typography variant="caption" color="text.secondary">Monto actual</Typography>
-                <Typography variant="body1" fontWeight={500}>{formatMoney(currentAmount)}</Typography>
-              </Box>
-              <Typography variant="h5" color="text.secondary" mx={1}>→</Typography>
-              <Box textAlign="right">
-                <Typography variant="caption" color="text.secondary">Nuevo monto</Typography>
-                <Typography variant="body1" fontWeight={700} color="success.main">{formatMoney(newAmount)}</Typography>
-              </Box>
-              <Box textAlign="right" ml={2}>
-                <Typography variant="caption" color="text.secondary">Diferencia</Typography>
-                <Typography variant="body2" color="success.main" fontWeight={500}>
-                  +{formatMoney(newAmount - currentAmount)}
+            <Grid container spacing={2} alignItems="flex-end">
+              <Grid item xs={4}>
+                <Typography variant="caption" color="text.secondary" display="block">Monto actual</Typography>
+                <Typography variant="body1" fontWeight={500} sx={{ py: '8.5px' }}>{formatMoney(currentAmount)}</Typography>
+              </Grid>
+              <Grid item xs={4}>
+                <Controller
+                  name="newAmount"
+                  control={control}
+                  rules={{ required: true, min: 0 }}
+                  render={({ field }) => (
+                    <CurrencyField
+                      label="Nuevo monto"
+                      fullWidth
+                      size="small"
+                      value={field.value ?? ''}
+                      onChange={(val) => field.onChange(val === '' ? 0 : val)}
+                      InputProps={{
+                        startAdornment: <InputAdornment position="start">{contract.currency === 'USD' ? 'USD' : '$'}</InputAdornment>,
+                      }}
+                    />
+                  )}
+                />
+              </Grid>
+              <Grid item xs={4}>
+                <Typography variant="caption" color="text.secondary" display="block">Diferencia</Typography>
+                <Typography
+                  variant="body1"
+                  fontWeight={600}
+                  color={newAmount - currentAmount >= 0 ? 'success.main' : 'error.main'}
+                  sx={{ py: '8.5px' }}
+                >
+                  {newAmount - currentAmount >= 0 ? '+' : ''}{formatMoney(newAmount - currentAmount)}
                 </Typography>
-              </Box>
-            </Box>
+              </Grid>
+            </Grid>
+            <Typography variant="caption" color="text.secondary" display="block" mt={1}>
+              "Nuevo monto" es editable — podés redondear el valor calculado por el índice.
+            </Typography>
           </Box>
 
           {adjust.isError && (

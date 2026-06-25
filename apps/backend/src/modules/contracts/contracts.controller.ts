@@ -85,12 +85,13 @@ export async function adjustContract(req: AuthRequest, res: Response): Promise<v
     return;
   }
   try {
-    const { percentage, indexValue, notes } = req.body;
+    const { percentage, indexValue, notes, newAmount } = req.body;
     const contract = await service.applyAdjustment(
       parseInt(req.params.id),
       Number(percentage),
       indexValue ? Number(indexValue) : undefined,
       notes,
+      newAmount ? Number(newAmount) : undefined,
     );
     res.json(contract);
   } catch (err: any) {

@@ -59,7 +59,10 @@ router.get('/:id/index-preview', async (req, res, next) => {
 
 router.post(
   '/:id/adjust',
-  [body('percentage').isFloat({ min: 0, max: 1000 }).withMessage('Porcentaje inválido')],
+  [
+    body('percentage').isFloat({ min: 0, max: 1000 }).withMessage('Porcentaje inválido'),
+    body('newAmount').optional().isFloat({ min: 0 }).withMessage('Monto inválido'),
+  ],
   adjustContract,
 );
 
