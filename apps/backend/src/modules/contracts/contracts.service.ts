@@ -32,6 +32,7 @@ export interface ContractsQuery {
   search?: string;
   status?: string;
   propertyId?: number;
+  ownerId?: number;
 }
 
 export async function getContracts(query: ContractsQuery) {
@@ -43,12 +44,17 @@ export async function getContracts(query: ContractsQuery) {
     deletedAt: null,
     ...(query.status && { status: query.status as ContractStatus }),
     ...(query.propertyId && { propertyId: query.propertyId }),
+    ...(query.ownerId && { property: { owners: { some: { ownerId: query.ownerId } } } }),
     ...(query.search && {
       OR: [
         { property: { street: { contains: query.search, mode: 'insensitive' } } },
         { property: { city: { contains: query.search, mode: 'insensitive' } } },
         { tenants: { some: { tenant: { firstName: { contains: query.search, mode: 'insensitive' } } } } },
         { tenants: { some: { tenant: { lastName: { contains: query.search, mode: 'insensitive' } } } } },
+        { tenants: { some: { tenant: { businessName: { contains: query.search, mode: 'insensitive' } } } } },
+        { property: { owners: { some: { owner: { firstName: { contains: query.search, mode: 'insensitive' } } } } } },
+        { property: { owners: { some: { owner: { lastName: { contains: query.search, mode: 'insensitive' } } } } } },
+        { property: { owners: { some: { owner: { businessName: { contains: query.search, mode: 'insensitive' } } } } } },
       ],
     }),
   };

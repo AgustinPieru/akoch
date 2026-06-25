@@ -5,13 +5,14 @@ import * as service from './contracts.service';
 
 export async function getContracts(req: AuthRequest, res: Response): Promise<void> {
   try {
-    const { page, limit, search, status, propertyId } = req.query as Record<string, string>;
+    const { page, limit, search, status, propertyId, ownerId } = req.query as Record<string, string>;
     const result = await service.getContracts({
       page: page ? parseInt(page) : undefined,
       limit: limit ? parseInt(limit) : undefined,
       search,
       status,
       propertyId: propertyId ? parseInt(propertyId) : undefined,
+      ownerId: ownerId ? parseInt(ownerId) : undefined,
     });
     res.json(result);
   } catch (err: any) {

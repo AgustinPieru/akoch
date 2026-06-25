@@ -73,10 +73,10 @@ export default function ContractsListPage() {
       <Box display="flex" gap={2} mb={2} flexWrap="wrap">
         <TextField
           size="small"
-          label="Buscar inquilino o propiedad"
+          label="Buscar inquilino, propietario o propiedad"
           value={search}
           onChange={(e) => { setSearch(e.target.value); setPage(0); }}
-          sx={{ minWidth: 260 }}
+          sx={{ minWidth: 280 }}
           InputProps={{
             startAdornment: <InputAdornment position="start"><Search fontSize="small" /></InputAdornment>,
           }}

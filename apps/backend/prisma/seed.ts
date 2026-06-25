@@ -1,6 +1,13 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
+// Datos de demo — nunca debe correr contra producción (ver incidente del 25/06/2026:
+// un deploy disparó este seed contra la base real y mezcló datos ficticios con reales).
+if (process.env.NODE_ENV === 'production') {
+  console.error('🚫 Seed bloqueado: NODE_ENV=production. Este script es solo para desarrollo local.');
+  process.exit(1);
+}
+
 const prisma = new PrismaClient();
 const d = (s: string) => new Date(s);
 

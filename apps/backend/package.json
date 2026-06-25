@@ -3,9 +3,6 @@
   "version": "1.0.0",
   "description": "API REST para el Sistema de Administración Inmobiliaria Akoch",
   "main": "dist/index.js",
-  "prisma": {
-    "seed": "ts-node prisma/seed.ts"
-  },
   "scripts": {
     "dev": "nodemon src/index.ts",
     "build": "tsc",
