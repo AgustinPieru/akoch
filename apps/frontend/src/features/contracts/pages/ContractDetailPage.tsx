@@ -14,6 +14,7 @@ import { usePayments, useGeneratePayments } from '@/features/payments/api/usePay
 import PaymentsTable from '@/features/payments/components/PaymentsTable';
 import DocumentList from '@/features/uploads/components/DocumentList';
 import GuarantorsSection from '../components/GuarantorsSection';
+import CommissionInstallmentsSection from '../components/CommissionInstallmentsSection';
 import { ROUTES } from '@/router/routes';
 
 const STATUS_LABELS: Record<string, { label: string; color: 'default' | 'warning' | 'success' | 'error' | 'info' }> = {
@@ -220,7 +221,7 @@ export default function ContractDetailPage() {
             <Divider sx={{ my: 1 }} />
             <Row label="Comisión administración" value={`${contract.adminCommissionPct}%`} />
             {contract.initialCommission && (
-              <Row label="Comisión inicial" value={formatMoney(contract.initialCommission)} />
+              <Row label="Honorarios" value={formatMoney(contract.initialCommission)} />
             )}
           </Paper>
         </Grid>
@@ -327,6 +328,14 @@ export default function ContractDetailPage() {
           <strong>Rescindido el {formatDate(contract.terminationDate)}</strong>
           {contract.terminationReason && ` — ${contract.terminationReason}`}
         </Alert>
+      )}
+
+      {contract.commissionInstallments.length > 0 && (
+        <Box mt={3}>
+          <Paper sx={{ p: 2 }}>
+            <CommissionInstallmentsSection contract={contract} />
+          </Paper>
+        </Box>
       )}
 
       <Box mt={3}>

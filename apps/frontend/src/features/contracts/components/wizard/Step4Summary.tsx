@@ -25,6 +25,7 @@ interface FormValues {
   freePercentage?: number;
   adminCommissionPct: number;
   initialCommission?: number;
+  initialCommissionInstallments?: number;
   specialClauses?: string;
 }
 
@@ -130,7 +131,10 @@ export default function Step4Summary({ propertyId, tenants, guarantors, formValu
           <Divider sx={{ my: 1 }} />
           <Row label="Comisión administración" value={`${formValues.adminCommissionPct}%`} />
           {formValues.initialCommission && (
-            <Row label="Comisión inicial" value={formatMoney(Number(formValues.initialCommission), formValues.currency)} />
+            <>
+              <Row label="Honorarios" value={formatMoney(Number(formValues.initialCommission), formValues.currency)} />
+              <Row label="Cuotas" value={`${formValues.initialCommissionInstallments || 1}`} />
+            </>
           )}
         </Grid>
       </Grid>

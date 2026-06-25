@@ -18,6 +18,7 @@ interface FormValues {
   freePercentage?: number;
   adminCommissionPct: number;
   initialCommission?: number;
+  initialCommissionInstallments?: number;
   specialClauses?: string;
 }
 
@@ -54,6 +55,7 @@ export default function EditContractDialog({ contract, onClose }: Props) {
       freePercentage: contract.freePercentage ?? undefined,
       adminCommissionPct: contract.adminCommissionPct,
       initialCommission: contract.initialCommission ?? undefined,
+      initialCommissionInstallments: contract.initialCommissionInstallments ?? 1,
       specialClauses: contract.specialClauses ?? '',
     },
   });
@@ -76,6 +78,9 @@ export default function EditContractDialog({ contract, onClose }: Props) {
           freePercentage: values.indexType === 'FREE' && values.freePercentage ? Number(values.freePercentage) : null,
           adminCommissionPct: Number(values.adminCommissionPct),
           initialCommission: values.initialCommission ? Number(values.initialCommission) : null,
+          initialCommissionInstallments: values.initialCommission && values.initialCommissionInstallments
+            ? Number(values.initialCommissionInstallments)
+            : 1,
           specialClauses: values.specialClauses || null,
           tenants: tenants.map(({ tenantId, isPrimary }) => ({ tenantId, isPrimary })),
         },

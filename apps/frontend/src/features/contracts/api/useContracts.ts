@@ -6,6 +6,14 @@ export interface ContractTenantLink {
   tenant: { id: number; firstName?: string; lastName?: string; businessName?: string; type: string; phone?: string; email?: string };
 }
 
+export interface CommissionInstallment {
+  id: number;
+  number: number;
+  amount: number;
+  status: 'PENDING' | 'PAID';
+  paidAt?: string;
+}
+
 export interface Contract {
   id: number;
   propertyId: number;
@@ -20,6 +28,8 @@ export interface Contract {
   freePercentage?: number;
   adminCommissionPct: number;
   initialCommission?: number;
+  initialCommissionInstallments: number;
+  commissionInstallments: CommissionInstallment[];
   status: string;
   terminationDate?: string;
   terminationReason?: string;
@@ -78,6 +88,17 @@ export function useUpdateContract() {
     onSuccess: (_data, { id }) => {
       qc.invalidateQueries({ queryKey: ['contracts', id] });
       qc.invalidateQueries({ queryKey: ['contracts'] });
+    },
+  });
+}
+
+export function useSetCommissionInstallmentStatus(contractId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ installmentId, status }: { installmentId: number; status: 'PENDING' | 'PAID' }) =>
+      api.patch(`/contracts/${contractId}/commission-installments/${installmentId}`, { status }).then((r) => r.data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['contracts', contractId] });
     },
   });
 }

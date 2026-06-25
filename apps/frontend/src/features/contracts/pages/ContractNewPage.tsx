@@ -27,6 +27,7 @@ interface FormValues {
   freePercentage?: number;
   adminCommissionPct: number;
   initialCommission?: number;
+  initialCommissionInstallments?: number;
   specialClauses?: string;
 }
 
@@ -94,6 +95,9 @@ export default function ContractNewPage() {
       freePercentage: values.indexType === 'FREE' && values.freePercentage ? Number(values.freePercentage) : undefined,
       adminCommissionPct: Number(values.adminCommissionPct),
       initialCommission: values.initialCommission ? Number(values.initialCommission) : undefined,
+      initialCommissionInstallments: values.initialCommission && values.initialCommissionInstallments
+        ? Number(values.initialCommissionInstallments)
+        : undefined,
       specialClauses: values.specialClauses || undefined,
     };
 

@@ -165,7 +165,10 @@ export async function getExpensesPeriodReport(year: number, month?: number) {
 // ─── Rentabilidad por propiedad ────────────────────────────────────────────────
 
 export async function getProfitabilityReport(year: number) {
-  const [payments, expenses] = await Promise.all([
+  const yearStart = new Date(`${year}-01-01T00:00:00.000Z`);
+  const yearEnd = new Date(`${year + 1}-01-01T00:00:00.000Z`);
+
+  const [payments, expenses, feeInstallments] = await Promise.all([
     prisma.payment.findMany({
       where: { periodYear: year, status: { in: ['PAID', 'PARTIAL'] } },
       include: {
@@ -183,6 +186,18 @@ export async function getProfitabilityReport(year: number) {
       where: { deletedAt: null, periodYear: year },
       select: { propertyId: true, amount: true, currency: true, paidBy: true },
     }),
+    prisma.contractFeeInstallment.findMany({
+      where: { status: 'PAID', paidAt: { gte: yearStart, lt: yearEnd } },
+      include: {
+        contract: {
+          select: {
+            currency: true,
+            propertyId: true,
+            property: { select: { id: true, street: true, number: true, city: true, type: true } },
+          },
+        },
+      },
+    }),
   ]);
 
   const map = new Map<number, {
@@ -190,24 +205,37 @@ export async function getProfitabilityReport(year: number) {
     currency: string;
     grossIncome: number;
     commissions: number;
+    feesCollected: number;
     expenses: number;
     netIncome: number;
+    agencyEarnings: number;
   }>();
 
-  for (const p of payments) {
-    const prop = p.contract.property;
+  function getEntry(prop: { id: number; street: string; number: string; city: string; type: string }, currency: string) {
     const entry = map.get(prop.id) ?? {
       property: prop,
-      currency: p.contract.currency,
+      currency,
       grossIncome: 0,
       commissions: 0,
+      feesCollected: 0,
       expenses: 0,
       netIncome: 0,
+      agencyEarnings: 0,
     };
+    map.set(prop.id, entry);
+    return entry;
+  }
+
+  for (const p of payments) {
+    const entry = getEntry(p.contract.property, p.contract.currency);
     const paid = Number(p.paidAmount ?? 0);
     entry.grossIncome += paid;
     entry.commissions += (paid * p.contract.adminCommissionPct) / 100;
-    map.set(prop.id, entry);
+  }
+
+  for (const f of feeInstallments) {
+    const entry = getEntry(f.contract.property, f.contract.currency);
+    entry.feesCollected += Number(f.amount);
   }
 
   for (const e of expenses) {
@@ -220,13 +248,16 @@ export async function getProfitabilityReport(year: number) {
   const rows = Array.from(map.values()).map((row) => ({
     ...row,
     netIncome: row.grossIncome - row.commissions - row.expenses,
+    agencyEarnings: row.commissions + row.feesCollected,
   })).sort((a, b) => b.netIncome - a.netIncome);
 
   const summary = {
     totalGross: rows.reduce((s, r) => s + r.grossIncome, 0),
     totalCommissions: rows.reduce((s, r) => s + r.commissions, 0),
+    totalFees: rows.reduce((s, r) => s + r.feesCollected, 0),
     totalExpenses: rows.reduce((s, r) => s + r.expenses, 0),
     totalNet: rows.reduce((s, r) => s + r.netIncome, 0),
+    totalAgencyEarnings: rows.reduce((s, r) => s + r.agencyEarnings, 0),
   };
 
   return { year, summary, properties: rows };

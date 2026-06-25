@@ -12,8 +12,19 @@ const contractInclude = {
     include: { tenant: { select: { id: true, firstName: true, lastName: true, businessName: true, type: true, phone: true, email: true } } },
   },
   guarantors: { where: { deletedAt: null }, orderBy: { id: 'asc' as const } },
+  commissionInstallments: { orderBy: { number: 'asc' as const } },
   adjustments: { orderBy: { appliedAt: 'desc' as const }, take: 10 },
 };
+
+// Divide el monto en `count` cuotas iguales; el resto por redondeo se ajusta en la última cuota.
+function buildFeeInstallments(amount: number, count: number) {
+  const n = Math.max(1, Math.floor(count) || 1);
+  const base = Math.floor((amount / n) * 100) / 100;
+  const installments = Array.from({ length: n }, (_, i) => ({ number: i + 1, amount: base }));
+  const remainder = Math.round((amount - base * n) * 100) / 100;
+  installments[n - 1].amount = Math.round((base + remainder) * 100) / 100;
+  return installments;
+}
 
 export interface ContractsQuery {
   page?: number;
@@ -76,6 +87,7 @@ export interface CreateContractInput {
   freePercentage?: number;
   adminCommissionPct: number;
   initialCommission?: number;
+  initialCommissionInstallments?: number;
   specialClauses?: string;
   tenants: { tenantId: number; isPrimary: boolean }[];
   guarantors?: { fullName: string; dni?: string; address?: string; phone?: string; email?: string }[];
@@ -120,11 +132,17 @@ export async function createContract(input: CreateContractInput) {
       freePercentage: input.freePercentage ?? null,
       adminCommissionPct: input.adminCommissionPct,
       initialCommission: input.initialCommission ?? null,
+      initialCommissionInstallments: input.initialCommissionInstallments ?? 1,
       specialClauses: input.specialClauses ?? null,
       nextAdjustmentDate,
       tenants: {
         create: input.tenants.map((t) => ({ tenantId: t.tenantId, isPrimary: t.isPrimary })),
       },
+      ...(input.initialCommission && input.initialCommission > 0 && {
+        commissionInstallments: {
+          create: buildFeeInstallments(input.initialCommission, input.initialCommissionInstallments ?? 1),
+        },
+      }),
       ...(input.guarantors && input.guarantors.length > 0 && {
         guarantors: {
           create: input.guarantors.map((g) => ({
@@ -325,6 +343,7 @@ export interface UpdateContractInput {
   freePercentage?: number | null;
   adminCommissionPct?: number;
   initialCommission?: number | null;
+  initialCommissionInstallments?: number;
   specialClauses?: string | null;
   tenants?: { tenantId: number; isPrimary: boolean }[];
 }
@@ -362,6 +381,19 @@ export async function updateContract(id: number, input: UpdateContractInput) {
     ]);
   }
 
+  if (input.initialCommission !== undefined || input.initialCommissionInstallments !== undefined) {
+    const newAmount = input.initialCommission !== undefined ? input.initialCommission : contract.initialCommission;
+    const newCount = input.initialCommissionInstallments ?? contract.initialCommissionInstallments;
+    await prisma.$transaction([
+      prisma.contractFeeInstallment.deleteMany({ where: { contractId: id } }),
+      ...(newAmount && newAmount > 0
+        ? [prisma.contractFeeInstallment.createMany({
+            data: buildFeeInstallments(newAmount, newCount).map((i) => ({ contractId: id, ...i })),
+          })]
+        : []),
+    ]);
+  }
+
   return prisma.contract.update({
     where: { id },
     data: {
@@ -375,10 +407,27 @@ export async function updateContract(id: number, input: UpdateContractInput) {
       ...(input.freePercentage !== undefined && { freePercentage: input.freePercentage }),
       ...(input.adminCommissionPct !== undefined && { adminCommissionPct: input.adminCommissionPct }),
       ...(input.initialCommission !== undefined && { initialCommission: input.initialCommission }),
+      ...(input.initialCommissionInstallments !== undefined && { initialCommissionInstallments: input.initialCommissionInstallments }),
       ...(input.specialClauses !== undefined && { specialClauses: input.specialClauses }),
       nextAdjustmentDate,
     },
     include: contractInclude,
+  });
+}
+
+export async function setCommissionInstallmentStatus(
+  contractId: number,
+  installmentId: number,
+  status: 'PENDING' | 'PAID',
+) {
+  const installment = await prisma.contractFeeInstallment.findFirst({
+    where: { id: installmentId, contractId },
+  });
+  if (!installment) throw { status: 404, message: 'Cuota no encontrada', code: 'NOT_FOUND' };
+
+  return prisma.contractFeeInstallment.update({
+    where: { id: installmentId },
+    data: { status, paidAt: status === 'PAID' ? new Date() : null },
   });
 }
 

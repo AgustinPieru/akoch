@@ -90,6 +90,11 @@ enum EmploymentStatus {
   OTRO
 }
 
+enum CommissionInstallmentStatus {
+  PENDING
+  PAID
+}
+
 enum ContractStatus {
   DRAFT
   ACTIVE
@@ -348,6 +353,7 @@ model Contract {
   freePercentage     Float?               @map("free_percentage")
   adminCommissionPct Float                @default(10) @map("admin_commission_pct")
   initialCommission  Float?               @map("initial_commission")
+  initialCommissionInstallments Int       @default(1) @map("initial_commission_installments")
   status             ContractStatus       @default(DRAFT)
   terminationDate    DateTime?            @map("termination_date")
   terminationReason  String?              @map("termination_reason")
@@ -363,6 +369,7 @@ model Contract {
   renewals            Contract[]           @relation("ContractRenewal")
   tenants             ContractTenant[]
   guarantors          Guarantor[]
+  commissionInstallments ContractFeeInstallment[]
   adjustments         ContractAdjustment[]
   payments            Payment[]
   expenses            Expense[]
@@ -399,6 +406,20 @@ model ContractTenant {
 
   @@unique([contractId, tenantId])
   @@map("contract_tenants")
+}
+
+model ContractFeeInstallment {
+  id         Int                          @id @default(autoincrement())
+  contractId Int                          @map("contract_id")
+  number     Int
+  amount     Float
+  status     CommissionInstallmentStatus  @default(PENDING)
+  paidAt     DateTime?                    @map("paid_at")
+  createdAt  DateTime                     @default(now()) @map("created_at")
+  contract   Contract                     @relation(fields: [contractId], references: [id], onDelete: Cascade)
+
+  @@unique([contractId, number])
+  @@map("contract_fee_installments")
 }
 
 model ContractAdjustment {

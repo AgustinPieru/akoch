@@ -32,6 +32,7 @@ export default function Step3Economics() {
   const currency = watch('currency');
   const startDate = watch('startDate');
   const durationMonths = watch('durationMonths');
+  const initialCommission = watch('initialCommission');
 
   const endDate = (() => {
     if (!startDate || !durationMonths) return '';
@@ -186,7 +187,7 @@ export default function Step3Economics() {
             control={control}
             render={({ field }) => (
               <CurrencyField
-                label="Comisión inicial (opcional)"
+                label="Honorarios (opcional)"
                 fullWidth
                 value={field.value ?? ''}
                 onChange={(val) => field.onChange(val === '' ? undefined : val)}
@@ -195,6 +196,19 @@ export default function Step3Economics() {
             )}
           />
         </Grid>
+        {!!initialCommission && (
+          <Grid item xs={12} sm={4}>
+            <TextField
+              label="Cantidad de cuotas"
+              type="number"
+              fullWidth
+              inputProps={{ min: 1, max: 24 }}
+              defaultValue={1}
+              {...register('initialCommissionInstallments', { valueAsNumber: true, min: 1 })}
+              helperText="En cuántas cuotas se cobran los honorarios"
+            />
+          </Grid>
+        )}
       </Grid>
 
       <TextField

@@ -103,12 +103,17 @@ export interface ProfitabilityRow {
   currency: string;
   grossIncome: number;
   commissions: number;
+  feesCollected: number;
   expenses: number;
   netIncome: number;
+  agencyEarnings: number;
 }
 export interface ProfitabilityReport {
   year: number;
-  summary: { totalGross: number; totalCommissions: number; totalExpenses: number; totalNet: number };
+  summary: {
+    totalGross: number; totalCommissions: number; totalFees: number;
+    totalExpenses: number; totalNet: number; totalAgencyEarnings: number;
+  };
   properties: ProfitabilityRow[];
 }
 export function useProfitabilityReport(year: number) {

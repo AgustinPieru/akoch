@@ -51,6 +51,24 @@ export async function updateContract(req: AuthRequest, res: Response): Promise<v
   }
 }
 
+export async function setCommissionInstallmentStatus(req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const { status } = req.body;
+    if (!['PENDING', 'PAID'].includes(status)) {
+      res.status(422).json({ error: 'Estado inválido', code: 'VALIDATION_ERROR' });
+      return;
+    }
+    const installment = await service.setCommissionInstallmentStatus(
+      parseInt(req.params.id),
+      parseInt(req.params.installmentId),
+      status,
+    );
+    res.json(installment);
+  } catch (err: any) {
+    res.status(err.status || 500).json({ error: err.message, code: err.code });
+  }
+}
+
 export async function activateContract(req: AuthRequest, res: Response): Promise<void> {
   try {
     const contract = await service.activateContract(parseInt(req.params.id));

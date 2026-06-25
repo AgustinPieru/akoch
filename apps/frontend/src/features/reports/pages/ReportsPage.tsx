@@ -436,9 +436,11 @@ function ProfitabilityTab() {
         <>
           <Grid container spacing={2} mb={3}>
             <Grid item xs={6} sm={3}><StatCard label="Ingresos brutos" value={formatMoney(data.summary.totalGross)} /></Grid>
-            <Grid item xs={6} sm={3}><StatCard label="Comisiones" value={formatMoney(data.summary.totalCommissions)} /></Grid>
+            <Grid item xs={6} sm={3}><StatCard label="Comisiones administración" value={formatMoney(data.summary.totalCommissions)} /></Grid>
+            <Grid item xs={6} sm={3}><StatCard label="Honorarios cobrados" value={formatMoney(data.summary.totalFees)} /></Grid>
+            <Grid item xs={6} sm={3}><StatCard label="Ganancia inmobiliaria" value={formatMoney(data.summary.totalAgencyEarnings)} color="success.main" /></Grid>
             <Grid item xs={6} sm={3}><StatCard label="Gastos" value={formatMoney(data.summary.totalExpenses)} color="error.main" /></Grid>
-            <Grid item xs={6} sm={3}><StatCard label="Neto" value={formatMoney(data.summary.totalNet)} color="success.main" /></Grid>
+            <Grid item xs={6} sm={3}><StatCard label="Neto propietarios" value={formatMoney(data.summary.totalNet)} color="success.main" /></Grid>
           </Grid>
           <Paper>
             <Table size="small">
@@ -447,13 +449,15 @@ function ProfitabilityTab() {
                   <TableCell>Propiedad</TableCell>
                   <TableCell align="right">Ingresos brutos</TableCell>
                   <TableCell align="right">Comisiones</TableCell>
+                  <TableCell align="right">Honorarios</TableCell>
+                  <TableCell align="right">Ganancia inmobiliaria</TableCell>
                   <TableCell align="right">Gastos</TableCell>
-                  <TableCell align="right">Neto</TableCell>
+                  <TableCell align="right">Neto propietario</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {data.properties.length === 0 ? (
-                  <TableRow><TableCell colSpan={5} align="center" sx={{ py: 4, color: 'text.secondary' }}>Sin datos para este año.</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={7} align="center" sx={{ py: 4, color: 'text.secondary' }}>Sin datos para este año.</TableCell></TableRow>
                 ) : data.properties.map((row) => (
                   <TableRow key={row.property.id}>
                     <TableCell>
@@ -462,6 +466,8 @@ function ProfitabilityTab() {
                     </TableCell>
                     <TableCell align="right">{formatMoney(row.grossIncome, row.currency)}</TableCell>
                     <TableCell align="right" sx={{ color: 'text.secondary' }}>{formatMoney(row.commissions, row.currency)}</TableCell>
+                    <TableCell align="right" sx={{ color: 'text.secondary' }}>{formatMoney(row.feesCollected, row.currency)}</TableCell>
+                    <TableCell align="right" sx={{ fontWeight: 600, color: 'success.main' }}>{formatMoney(row.agencyEarnings, row.currency)}</TableCell>
                     <TableCell align="right" sx={{ color: 'error.main' }}>{formatMoney(row.expenses, row.currency)}</TableCell>
                     <TableCell align="right" sx={{ fontWeight: 700, color: row.netIncome >= 0 ? 'success.main' : 'error.main' }}>
                       {formatMoney(row.netIncome, row.currency)}
