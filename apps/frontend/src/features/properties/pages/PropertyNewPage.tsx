@@ -11,6 +11,7 @@ export default function PropertyNewPage() {
   const methods = useForm({
     defaultValues: {
       type: 'DEPARTAMENTO',
+      province: 'Santa Fe',
       ablPaidBy: 'TENANT',
       ordinaryExpensesPaidBy: 'TENANT',
       extraordinaryExpensesPaidBy: 'TENANT',

@@ -19,6 +19,13 @@ const PROPERTY_TYPES = [
   { value: 'OTRO', label: 'Otro' },
 ];
 
+const PROVINCES = [
+  'Buenos Aires', 'CABA', 'Catamarca', 'Chaco', 'Chubut', 'Córdoba', 'Corrientes',
+  'Entre Ríos', 'Formosa', 'Jujuy', 'La Pampa', 'La Rioja', 'Mendoza', 'Misiones',
+  'Neuquén', 'Río Negro', 'Salta', 'San Juan', 'San Luis', 'Santa Cruz', 'Santa Fe',
+  'Santiago del Estero', 'Tierra del Fuego', 'Tucumán',
+];
+
 const PAID_BY = [
   { value: 'TENANT', label: 'Inquilino' },
   { value: 'OWNER', label: 'Propietario' },
@@ -123,16 +130,30 @@ export default function PropertyForm() {
             error={!!errors.number}
           />
         </Grid>
-        <Grid item xs={12} sm={3}>
+        <Grid item xs={12} sm={2}>
           <TextField label="Piso" fullWidth {...register('floor')} />
         </Grid>
-        <Grid item xs={12} sm={3}>
+        <Grid item xs={12} sm={2}>
           <TextField label="Departamento" fullWidth {...register('apartment')} />
         </Grid>
         <Grid item xs={12} sm={3}>
-          <TextField label="Ciudad *" fullWidth {...register('city', { required: true })} error={!!errors.city} />
+          <TextField label="Ciudad / Localidad *" fullWidth {...register('city', { required: true })} error={!!errors.city} />
         </Grid>
         <Grid item xs={12} sm={3}>
+          <TextField
+            select
+            label="Provincia *"
+            fullWidth
+            defaultValue="Santa Fe"
+            {...register('province', { required: 'Provincia requerida' })}
+            error={!!errors.province}
+          >
+            {PROVINCES.map((p) => (
+              <MenuItem key={p} value={p}>{p}</MenuItem>
+            ))}
+          </TextField>
+        </Grid>
+        <Grid item xs={12} sm={2}>
           <TextField label="Código postal" fullWidth {...register('zipCode')} />
         </Grid>
         <Grid item xs={12} sm={4}>
