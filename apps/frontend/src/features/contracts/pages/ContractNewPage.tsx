@@ -6,13 +6,16 @@ import {
 import { useForm, FormProvider } from 'react-hook-form';
 import Step1Property from '../components/wizard/Step1Property';
 import Step2Tenants from '../components/wizard/Step2Tenants';
+import Step3Guarantors from '../components/wizard/Step3Guarantors';
 import Step3Economics from '../components/wizard/Step3Economics';
 import Step4Summary from '../components/wizard/Step4Summary';
 import { useCreateContract } from '../api/useContracts';
 import { SelectedTenant } from '../components/wizard/Step2Tenants';
+import { WizardGuarantor } from '../components/wizard/Step3Guarantors';
 import { ROUTES } from '@/router/routes';
+import api from '@/lib/axios';
 
-const STEPS = ['Propiedad', 'Inquilinos', 'Condiciones', 'Resumen'];
+const STEPS = ['Propiedad', 'Inquilinos', 'Garantes', 'Condiciones', 'Resumen'];
 
 interface FormValues {
   startDate: string;
@@ -32,6 +35,7 @@ export default function ContractNewPage() {
   const [activeStep, setActiveStep] = useState(0);
   const [propertyId, setPropertyId] = useState<number | null>(null);
   const [tenants, setTenants] = useState<SelectedTenant[]>([]);
+  const [guarantors, setGuarantors] = useState<WizardGuarantor[]>([]);
 
   const todayLocal = (() => {
     const d = new Date();
@@ -54,7 +58,7 @@ export default function ContractNewPage() {
   const canAdvance = () => {
     if (activeStep === 0) return propertyId !== null;
     if (activeStep === 1) return tenants.length > 0 && tenants.some((t) => t.isPrimary);
-    if (activeStep === 2) {
+    if (activeStep === 3) {
       const v = methods.getValues();
       return !!v.startDate && !!v.durationMonths && !!v.initialAmount;
     }
@@ -62,7 +66,7 @@ export default function ContractNewPage() {
   };
 
   const handleNext = () => {
-    if (activeStep === 2) {
+    if (activeStep === 3) {
       methods.trigger().then((valid) => {
         if (valid) setActiveStep((s) => s + 1);
       });
@@ -78,6 +82,9 @@ export default function ContractNewPage() {
     const payload = {
       propertyId,
       tenants: tenants.map(({ tenantId, isPrimary }) => ({ tenantId, isPrimary })),
+      guarantors: guarantors.length > 0
+        ? guarantors.map(({ files, ...g }) => g)
+        : undefined,
       startDate: values.startDate,
       durationMonths: Number(values.durationMonths),
       initialAmount: Number(values.initialAmount),
@@ -92,9 +99,32 @@ export default function ContractNewPage() {
 
     try {
       const contract = await createContract.mutateAsync(payload);
+      await uploadStagedGuarantorFiles(contract.guarantors ?? []);
       navigate(ROUTES.CONTRACT_DETAIL(contract.id));
     } catch {
       // errors surface via mutation state
+    }
+  };
+
+  // Los garantes recién obtienen un id real al crear el contrato; los archivos
+  // adjuntados en el wizard quedan en memoria hasta este punto.
+  const uploadStagedGuarantorFiles = async (createdGuarantors: { id: number }[]) => {
+    for (let i = 0; i < guarantors.length; i++) {
+      const created = createdGuarantors[i];
+      if (!created) continue;
+      for (const staged of guarantors[i].files) {
+        const fd = new FormData();
+        fd.append('file', staged.file);
+        fd.append('name', staged.file.name);
+        fd.append('fileType', staged.fileType);
+        try {
+          await api.post(`/documents/guarantor/${created.id}`, fd, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+          });
+        } catch {
+          // El contrato ya quedó creado; el documento se puede reintentar desde el detalle.
+        }
+      }
     }
   };
 
@@ -116,11 +146,15 @@ export default function ContractNewPage() {
           {activeStep === 1 && (
             <Step2Tenants value={tenants} onChange={setTenants} />
           )}
-          {activeStep === 2 && <Step3Economics />}
-          {activeStep === 3 && propertyId && (
+          {activeStep === 2 && (
+            <Step3Guarantors value={guarantors} onChange={setGuarantors} />
+          )}
+          {activeStep === 3 && <Step3Economics />}
+          {activeStep === 4 && propertyId && (
             <Step4Summary
               propertyId={propertyId}
               tenants={tenants}
+              guarantors={guarantors}
               formValues={methods.getValues()}
             />
           )}

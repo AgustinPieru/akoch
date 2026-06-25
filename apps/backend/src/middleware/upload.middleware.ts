@@ -21,32 +21,30 @@ const storage = multer.diskStorage({
 });
 
 const ALLOWED_MIME_TYPES = [
-  'image/jpeg', 'image/png', 'image/webp', 'image/gif',
+  'image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/heic', 'image/heif',
   'application/pdf',
   'application/msword',
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
 ];
 
+function fileFilter(_req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) {
+  if (ALLOWED_MIME_TYPES.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    const err = new Error(`Tipo de archivo no permitido: ${file.mimetype}`) as Error & { status: number };
+    err.status = 400;
+    cb(err);
+  }
+}
+
 export const uploadSingle = multer({
   storage,
   limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
-  fileFilter: (_req, file, cb) => {
-    if (ALLOWED_MIME_TYPES.includes(file.mimetype)) {
-      cb(null, true);
-    } else {
-      cb(new Error(`Tipo de archivo no permitido: ${file.mimetype}`));
-    }
-  },
+  fileFilter,
 }).single('file');
 
 export const uploadMultiple = multer({
   storage,
   limits: { fileSize: 10 * 1024 * 1024 },
-  fileFilter: (_req, file, cb) => {
-    if (ALLOWED_MIME_TYPES.includes(file.mimetype)) {
-      cb(null, true);
-    } else {
-      cb(new Error(`Tipo de archivo no permitido: ${file.mimetype}`));
-    }
-  },
+  fileFilter,
 }).array('files', 20);

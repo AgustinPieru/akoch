@@ -11,6 +11,7 @@ const contractInclude = {
   tenants: {
     include: { tenant: { select: { id: true, firstName: true, lastName: true, businessName: true, type: true, phone: true, email: true } } },
   },
+  guarantors: { where: { deletedAt: null }, orderBy: { id: 'asc' as const } },
   adjustments: { orderBy: { appliedAt: 'desc' as const }, take: 10 },
 };
 
@@ -77,6 +78,7 @@ export interface CreateContractInput {
   initialCommission?: number;
   specialClauses?: string;
   tenants: { tenantId: number; isPrimary: boolean }[];
+  guarantors?: { fullName: string; dni?: string; address?: string; phone?: string; email?: string }[];
 }
 
 export async function createContract(input: CreateContractInput) {
@@ -123,6 +125,17 @@ export async function createContract(input: CreateContractInput) {
       tenants: {
         create: input.tenants.map((t) => ({ tenantId: t.tenantId, isPrimary: t.isPrimary })),
       },
+      ...(input.guarantors && input.guarantors.length > 0 && {
+        guarantors: {
+          create: input.guarantors.map((g) => ({
+            fullName: g.fullName,
+            dni: g.dni || null,
+            address: g.address || null,
+            phone: g.phone || null,
+            email: g.email || null,
+          })),
+        },
+      }),
     },
     include: contractInclude,
   });

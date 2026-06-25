@@ -13,6 +13,7 @@ import EditContractDialog from '../components/EditContractDialog';
 import { usePayments, useGeneratePayments } from '@/features/payments/api/usePayments';
 import PaymentsTable from '@/features/payments/components/PaymentsTable';
 import DocumentList from '@/features/uploads/components/DocumentList';
+import GuarantorsSection from '../components/GuarantorsSection';
 import { ROUTES } from '@/router/routes';
 
 const STATUS_LABELS: Record<string, { label: string; color: 'default' | 'warning' | 'success' | 'error' | 'info' }> = {
@@ -327,6 +328,12 @@ export default function ContractDetailPage() {
           {contract.terminationReason && ` — ${contract.terminationReason}`}
         </Alert>
       )}
+
+      <Box mt={3}>
+        <Paper sx={{ p: 2 }}>
+          <GuarantorsSection contractId={contractId} />
+        </Paper>
+      </Box>
 
       <Box mt={3}>
         <Paper sx={{ p: 2 }}>

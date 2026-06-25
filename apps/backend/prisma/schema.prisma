@@ -361,6 +361,7 @@ model Contract {
   previousContract    Contract?            @relation("ContractRenewal", fields: [previousContractId], references: [id])
   renewals            Contract[]           @relation("ContractRenewal")
   tenants             ContractTenant[]
+  guarantors          Guarantor[]
   adjustments         ContractAdjustment[]
   payments            Payment[]
   expenses            Expense[]
@@ -368,6 +369,22 @@ model Contract {
   informalOccupations InformalOccupation[]
 
   @@map("contracts")
+}
+
+model Guarantor {
+  id         Int       @id @default(autoincrement())
+  contractId Int       @map("contract_id")
+  fullName   String    @map("full_name")
+  dni        String?
+  address    String?
+  phone      String?
+  email      String?
+  deletedAt  DateTime? @map("deleted_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+  contract   Contract  @relation(fields: [contractId], references: [id], onDelete: Cascade)
+
+  @@map("guarantors")
 }
 
 model ContractTenant {

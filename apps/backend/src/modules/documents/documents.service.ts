@@ -5,7 +5,7 @@ import { env } from '../../config/env';
 
 const prisma = new PrismaClient();
 
-export type EntityType = 'owner' | 'tenant' | 'property' | 'contract';
+export type EntityType = 'owner' | 'tenant' | 'property' | 'contract' | 'guarantor';
 
 function fileUrl(filename: string) {
   return `${env.BACKEND_URL}/uploads/${filename}`;

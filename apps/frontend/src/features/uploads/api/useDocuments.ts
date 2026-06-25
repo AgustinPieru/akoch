@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 
-export type EntityType = 'owner' | 'tenant' | 'property' | 'contract';
+export type EntityType = 'owner' | 'tenant' | 'property' | 'contract' | 'guarantor';
 
 export interface Document {
   id: number;

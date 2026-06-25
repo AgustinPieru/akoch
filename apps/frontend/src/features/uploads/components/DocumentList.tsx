@@ -13,13 +13,21 @@ import type { EntityType } from '../api/useDocuments';
 import { useDocuments, useDeleteDocument, useUploadDocument } from '../api/useDocuments';
 import FileUploadZone from './FileUploadZone';
 
-const FILE_TYPES = [
+export const FILE_TYPES = [
   { value: 'dni', label: 'DNI' },
   { value: 'contrato', label: 'Contrato' },
-  { value: 'escritura', label: 'Escritura' },
+  { value: 'escritura', label: 'Escritura de propiedad' },
   { value: 'garantia', label: 'Garantía' },
   { value: 'recibo', label: 'Recibo' },
+  { value: 'recibo_sueldo', label: 'Recibo de sueldo' },
+  { value: 'monotributo', label: 'Monotributo' },
   { value: 'otro', label: 'Otro' },
+];
+
+export const GUARANTOR_FILE_TYPES = [
+  { value: 'escritura', label: 'Escritura de propiedad' },
+  { value: 'monotributo', label: 'Monotributo' },
+  { value: 'recibo_sueldo', label: 'Recibo de sueldo' },
 ];
 
 function fileIcon(mimeType?: string) {
@@ -40,9 +48,10 @@ const API_BASE = '';
 interface Props {
   entityType: EntityType;
   entityId: number;
+  fileTypeOptions?: { value: string; label: string }[];
 }
 
-export default function DocumentList({ entityType, entityId }: Props) {
+export default function DocumentList({ entityType, entityId, fileTypeOptions = FILE_TYPES }: Props) {
   const { data: docs, isLoading, error } = useDocuments(entityType, entityId);
   const upload = useUploadDocument(entityType, entityId);
   const deleteMut = useDeleteDocument(entityType, entityId);
@@ -61,7 +70,7 @@ export default function DocumentList({ entityType, entityId }: Props) {
         onUpload={handleUpload}
         accept=".pdf,.doc,.docx,image/*"
         label="Subir documento"
-        fileTypeOptions={FILE_TYPES}
+        fileTypeOptions={fileTypeOptions}
       />
 
       {isLoading && <CircularProgress size={20} sx={{ mt: 2 }} />}

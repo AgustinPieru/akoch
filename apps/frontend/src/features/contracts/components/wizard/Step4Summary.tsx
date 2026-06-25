@@ -1,6 +1,7 @@
 import { Box, Grid, Typography, Divider, Chip, Alert } from '@mui/material';
 import { useProperty } from '@/features/properties/api/useProperties';
 import { SelectedTenant } from './Step2Tenants';
+import { WizardGuarantor } from './Step3Guarantors';
 
 const INDEX_LABELS: Record<string, string> = {
   ICL_BCRA: 'ICL — Banco Central',
@@ -30,6 +31,7 @@ interface FormValues {
 interface Props {
   propertyId: number;
   tenants: SelectedTenant[];
+  guarantors: WizardGuarantor[];
   formValues: FormValues;
 }
 
@@ -42,7 +44,7 @@ function Row({ label, value }: { label: string; value: string }) {
   );
 }
 
-export default function Step4Summary({ propertyId, tenants, formValues }: Props) {
+export default function Step4Summary({ propertyId, tenants, guarantors, formValues }: Props) {
   const { data: property } = useProperty(propertyId);
 
   const localDateStr = (s: string) => {
@@ -96,6 +98,19 @@ export default function Step4Summary({ propertyId, tenants, formValues }: Props)
               />
             ))}
           </Box>
+
+          <Divider sx={{ my: 2 }} />
+
+          <Typography variant="subtitle2" color="text.secondary" gutterBottom>Garantes</Typography>
+          {guarantors.length > 0 ? (
+            <Box display="flex" gap={1} flexWrap="wrap">
+              {guarantors.map((g, i) => (
+                <Chip key={i} label={g.fullName} size="small" />
+              ))}
+            </Box>
+          ) : (
+            <Typography variant="body2" color="text.secondary">Sin garantes cargados</Typography>
+          )}
         </Grid>
 
         <Grid item xs={12} md={6}>

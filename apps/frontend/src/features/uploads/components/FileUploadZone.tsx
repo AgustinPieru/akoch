@@ -26,7 +26,7 @@ export default function FileUploadZone({
     try {
       await onUpload(file, { name: file.name, fileType: fileTypeOptions?.[0]?.value ?? 'otro' });
     } catch (e: any) {
-      setError(e?.response?.data?.message ?? 'Error al subir el archivo');
+      setError(e?.response?.data?.error ?? 'Error al subir el archivo');
     } finally {
       setUploading(false);
     }

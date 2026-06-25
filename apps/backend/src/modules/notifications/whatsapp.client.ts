@@ -142,6 +142,14 @@ export function initWhatsApp() {
     console.log(`[whatsapp] Desconectado: ${reason}`);
   });
 
-  client.initialize();
+  client.initialize().catch((err) => {
+    console.error('[whatsapp] Error al inicializar cliente:', err?.message || err);
+    status = 'disconnected';
+    loadingPercent = 0;
+    loadingMessage = '';
+    qrDataUrl = null;
+    client = null;
+    broadcastStatus();
+  });
   console.log('[whatsapp] Inicializando cliente...');
 }

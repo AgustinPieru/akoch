@@ -50,6 +50,17 @@ export default function ContractsListPage() {
       : [primary.tenant.firstName, primary.tenant.lastName].filter(Boolean).join(' ') || '—';
   };
 
+  const getOwnerName = (owners: { owner: { firstName?: string; lastName?: string; businessName?: string; type: string } }[]) => {
+    if (!owners.length) return '—';
+    return owners
+      .map((o) =>
+        o.owner.type === 'PERSONA_JURIDICA'
+          ? o.owner.businessName || '—'
+          : [o.owner.firstName, o.owner.lastName].filter(Boolean).join(' ') || '—'
+      )
+      .join(', ');
+  };
+
   return (
     <Box>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
@@ -91,6 +102,7 @@ export default function ContractsListPage() {
             <TableHead>
               <TableRow sx={{ '& th': { fontWeight: 600 } }}>
                 <TableCell>Propiedad</TableCell>
+                <TableCell>Propietario</TableCell>
                 <TableCell>Inquilino principal</TableCell>
                 <TableCell>Inicio</TableCell>
                 <TableCell>Vencimiento</TableCell>
@@ -101,7 +113,7 @@ export default function ContractsListPage() {
             <TableBody>
               {data.data.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} align="center" sx={{ py: 4, color: 'text.secondary' }}>
+                  <TableCell colSpan={7} align="center" sx={{ py: 4, color: 'text.secondary' }}>
                     No hay contratos.
                   </TableCell>
                 </TableRow>
@@ -121,6 +133,7 @@ export default function ContractsListPage() {
                         </Typography>
                         <Typography variant="caption" color="text.secondary">{c.property.city}</Typography>
                       </TableCell>
+                      <TableCell>{getOwnerName(c.property.owners)}</TableCell>
                       <TableCell>{getTenantName(c.tenants)}</TableCell>
                       <TableCell>{formatDate(c.startDate)}</TableCell>
                       <TableCell>{formatDate(c.endDate)}</TableCell>
