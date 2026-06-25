@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import {
   Table, TableBody, TableCell, TableHead, TableRow, Chip, IconButton,
-  Tooltip, Typography, Box,
+  Tooltip, Typography, Box, TableContainer,
 } from '@mui/material';
 import { CheckCircle, Warning, PictureAsPdf, Send, Home, Person } from '@mui/icons-material';
 import api from '@/lib/axios';
 import { Payment } from '../api/usePayments';
 import RegisterPaymentDialog from './RegisterPaymentDialog';
+import EditPaymentAmountDialog from './EditPaymentAmountDialog';
 import SendReceiptDialog from '@/features/notifications/components/SendReceiptDialog';
 
 const MONTHS_SHORT = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
@@ -47,6 +48,7 @@ async function downloadReceipt(payment: Payment) {
 export default function PaymentsTable({ payments, currency, hideContext = false }: Props) {
   const [selected, setSelected] = useState<Payment | null>(null);
   const [sendReceipt, setSendReceipt] = useState<Payment | null>(null);
+  const [editingAmount, setEditingAmount] = useState<Payment | null>(null);
 
   const formatMoney = (n: number, cur?: string) => {
     const c = cur ?? currency ?? 'ARS';
@@ -62,6 +64,7 @@ export default function PaymentsTable({ payments, currency, hideContext = false 
 
   return (
     <>
+      <TableContainer>
       <Table size="small">
         <TableHead>
           <TableRow sx={{ '& th': { fontWeight: 600 } }}>
@@ -121,7 +124,27 @@ export default function PaymentsTable({ payments, currency, hideContext = false 
                     </TableCell>
                   )}
                   <TableCell>{formatDate(p.dueDate)}</TableCell>
-                  <TableCell align="right">{formatMoney(p.expectedAmount, p.contract.currency)}</TableCell>
+                  <TableCell align="right">
+                    {p.status !== 'PAID' ? (
+                      <Tooltip title="Editar monto esperado">
+                        <Typography
+                          variant="body2"
+                          component="span"
+                          onClick={() => setEditingAmount(p)}
+                          sx={{
+                            cursor: 'pointer',
+                            borderBottom: '1px dashed',
+                            borderColor: 'text.disabled',
+                            '&:hover': { color: 'primary.main', borderColor: 'primary.main' },
+                          }}
+                        >
+                          {formatMoney(p.expectedAmount, p.contract.currency)}
+                        </Typography>
+                      </Tooltip>
+                    ) : (
+                      formatMoney(p.expectedAmount, p.contract.currency)
+                    )}
+                  </TableCell>
                   <TableCell align="right">{p.paidAmount != null ? formatMoney(p.paidAmount, p.contract.currency) : '—'}</TableCell>
                   <TableCell align="right">
                     {p.interestAmount != null && p.interestAmount > 0 ? (
@@ -169,9 +192,14 @@ export default function PaymentsTable({ payments, currency, hideContext = false 
           )}
         </TableBody>
       </Table>
+      </TableContainer>
 
       {selected && (
         <RegisterPaymentDialog payment={selected} onClose={() => setSelected(null)} />
+      )}
+
+      {editingAmount && (
+        <EditPaymentAmountDialog payment={editingAmount} onClose={() => setEditingAmount(null)} />
       )}
 
       {sendReceipt && (

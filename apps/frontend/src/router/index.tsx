@@ -30,6 +30,7 @@ const ReportsPage = lazy(() => import('@/features/reports/pages/ReportsPage'));
 const OccupationsListPage = lazy(() => import('@/features/occupations/pages/OccupationsListPage'));
 const OccupationDetailPage = lazy(() => import('@/features/occupations/pages/OccupationDetailPage'));
 const WhatsAppSetupPage = lazy(() => import('@/features/notifications/pages/WhatsAppSetupPage'));
+const SettingsPage = lazy(() => import('@/features/settings/pages/SettingsPage'));
 
 function Loading() {
   return (
@@ -77,6 +78,7 @@ export default function AppRouter() {
           <Route path={ROUTES.OCCUPATIONS} element={<OccupationsListPage />} />
           <Route path="/ocupaciones/:id" element={<OccupationDetailPage />} />
           <Route path={ROUTES.WHATSAPP_SETUP} element={<WhatsAppSetupPage />} />
+          <Route path={ROUTES.SETTINGS} element={<SettingsPage />} />
         </Route>
 
         <Route path="*" element={<Navigate to={ROUTES.DASHBOARD} replace />} />

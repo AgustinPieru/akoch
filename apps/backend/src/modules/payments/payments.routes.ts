@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { body } from 'express-validator';
 import { authenticate } from '../../middleware/auth.middleware';
 import {
-  getPayments, getPayment, generatePayments, registerPayment, markPaymentLate, downloadReceipt,
+  getPayments, getPayment, generatePayments, registerPayment, markPaymentLate, downloadReceipt, updatePaymentAmount,
 } from './payments.controller';
 
 const router = Router();
@@ -25,6 +25,13 @@ router.post(
     body('interestRate').optional().isFloat({ min: 0, max: 10 }).withMessage('Tasa de interés inválida'),
   ],
   registerPayment,
+);
+
+// Editar el monto esperado de un período (mientras no esté pagado)
+router.patch(
+  '/:id/amount',
+  [body('expectedAmount').isFloat({ min: 0 }).withMessage('Monto inválido')],
+  updatePaymentAmount,
 );
 
 // Marcar como atrasado

@@ -23,4 +23,5 @@ export const ROUTES = {
   OCCUPATIONS: '/ocupaciones',
   OCCUPATION_DETAIL: (id: number | string) => `/ocupaciones/${id}`,
   WHATSAPP_SETUP: '/configuracion/whatsapp',
+  SETTINGS: '/configuracion',
 } as const;

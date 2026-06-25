@@ -70,6 +70,9 @@ const CurrencyField = forwardRef<HTMLInputElement, Props>(function CurrencyField
       v = `${intPart},${decPart}`;
     }
     setRaw(v);
+    // Propaga el valor en cada tecla (no solo al perder el foco), para que botones
+    // de guardar y previews que dependen del valor se habiliten/actualicen al instante.
+    onChange(toNumber(v));
   };
 
   return (

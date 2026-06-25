@@ -181,6 +181,18 @@ export async function registerPayment(id: number, input: RegisterPaymentInput) {
   });
 }
 
+export async function updatePaymentAmount(id: number, expectedAmount: number) {
+  const payment = await getPaymentById(id);
+  if (payment.status === 'PAID') {
+    throw { status: 409, message: 'No se puede editar el monto de un cobro ya pagado', code: 'ALREADY_PAID' };
+  }
+  return prisma.payment.update({
+    where: { id },
+    data: { expectedAmount },
+    include: paymentInclude,
+  });
+}
+
 export async function markPaymentLate(id: number) {
   const payment = await getPaymentById(id);
   if (payment.status !== 'PENDING') {

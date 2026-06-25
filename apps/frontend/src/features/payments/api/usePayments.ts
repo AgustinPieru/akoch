@@ -71,6 +71,18 @@ export function useRegisterPayment() {
   });
 }
 
+export function useUpdatePaymentAmount() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, expectedAmount }: { id: number; expectedAmount: number }) =>
+      api.patch(`/payments/${id}/amount`, { expectedAmount }).then((r) => r.data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['payments'] });
+      qc.invalidateQueries({ queryKey: ['contracts'] });
+    },
+  });
+}
+
 export function useMarkPaymentLate() {
   const qc = useQueryClient();
   return useMutation({

@@ -53,6 +53,19 @@ export async function registerPayment(req: Request, res: Response, next: NextFun
   }
 }
 
+export async function updatePaymentAmount(req: Request, res: Response, next: NextFunction) {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ error: 'Datos inválidos', code: 'VALIDATION_ERROR', details: errors.array() });
+  }
+  try {
+    const payment = await service.updatePaymentAmount(Number(req.params.id), Number(req.body.expectedAmount));
+    res.json(payment);
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function markPaymentLate(req: Request, res: Response, next: NextFunction) {
   try {
     const payment = await service.markPaymentLate(Number(req.params.id));

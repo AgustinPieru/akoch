@@ -631,6 +631,18 @@ model InformalOccupation {
 }
 
 // ──────────────────────────────────────────────
+// CONFIGURACIÓN GLOBAL
+// ──────────────────────────────────────────────
+
+model Setting {
+  id                Int      @id @default(1)
+  autoAdjustEnabled Boolean  @default(true) @map("auto_adjust_enabled")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  @@map("settings")
+}
+
+// ──────────────────────────────────────────────
 // DOCUMENTOS
 // ──────────────────────────────────────────────
 

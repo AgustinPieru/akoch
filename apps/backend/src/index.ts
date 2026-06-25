@@ -29,6 +29,8 @@ import reportsRoutes from './modules/reports/reports.routes';
 import documentsRoutes from './modules/documents/documents.routes';
 import informalOccupationsRoutes from './modules/informal-occupations/informal-occupations.routes';
 import notificationsRoutes from './modules/notifications/notifications.routes';
+import settingsRoutes from './modules/settings/settings.routes';
+import { getSettings } from './modules/settings/settings.service';
 
 const app = express();
 
@@ -64,6 +66,11 @@ app.get('/api/health', (_req, res) => {
 // Trigger manual de ajuste automático (para testing o corrección)
 app.post('/api/v1/contracts/run-adjustments', async (_req, res) => {
   try {
+    const settings = await getSettings();
+    if (!settings.autoAdjustEnabled) {
+      res.status(409).json({ error: 'El ajuste automático está pausado en Configuración', code: 'AUTO_ADJUST_PAUSED' });
+      return;
+    }
     const result = await runAutoAdjustments();
     res.json(result);
   } catch (err: any) {
@@ -127,6 +134,7 @@ app.use('/api/v1/reports', reportsRoutes);
 app.use('/api/v1/documents', documentsRoutes);
 app.use('/api/v1/ocupaciones', informalOccupationsRoutes);
 app.use('/api/v1/notifications', notificationsRoutes);
+app.use('/api/v1/settings', settingsRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);
@@ -144,6 +152,11 @@ process.on('SIGTERM', shutdown);
 cron.schedule(
   '0 8 * * *',
   async () => {
+    const settings = await getSettings();
+    if (!settings.autoAdjustEnabled) {
+      console.log('[cron] Ajuste automático pausado en Configuración — se omite.');
+      return;
+    }
     console.log('[cron] Iniciando ajuste automático de contratos...');
     await runAutoAdjustments();
   },

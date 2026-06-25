@@ -37,6 +37,7 @@ import {
   Logout as LogoutIcon,
   AccountCircle as AccountCircleIcon,
   WhatsApp as WhatsAppIcon,
+  Settings as SettingsIcon,
 } from '@mui/icons-material';
 import { useAuth } from '@/features/auth/hooks/useAuthContext';
 import { ROUTES } from '@/router/routes';
@@ -56,6 +57,7 @@ const navItems = [
   { label: 'Reportes', icon: <AssessmentIcon />, path: ROUTES.REPORTS },
   { label: 'Ventas', icon: <StorefrontIcon />, path: ROUTES.SALES },
   { label: 'WhatsApp', icon: <WhatsAppIcon />, path: ROUTES.WHATSAPP_SETUP },
+  { label: 'Configuración', icon: <SettingsIcon />, path: ROUTES.SETTINGS },
 ];
 
 export default function DashboardLayout() {
