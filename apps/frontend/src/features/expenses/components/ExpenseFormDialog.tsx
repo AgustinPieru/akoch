@@ -9,7 +9,7 @@ import { useProperties } from '@/features/properties/api/useProperties';
 const CATEGORIES = [
   { value: 'EXPENSAS', label: 'Expensas' },
   { value: 'ABL', label: 'Tasa municipal' },
-  { value: 'API', label: 'Impuesto inmobiliario' },
+  { value: 'API', label: 'API' },
   { value: 'GAS', label: 'Gas' },
   { value: 'ELECTRICIDAD', label: 'Electricidad' },
   { value: 'AGUA', label: 'Agua' },

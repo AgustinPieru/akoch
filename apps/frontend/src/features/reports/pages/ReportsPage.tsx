@@ -34,7 +34,7 @@ const PAYMENT_STATUS_CONFIG: Record<string, { label: string; color: 'default' | 
 const PAYER_LABELS: Record<string, string> = { AGENCY: 'Inmobiliaria', OWNER: 'Propietario', TENANT: 'Inquilino' };
 
 const CATEGORY_LABELS: Record<string, string> = {
-  ABL: 'Tasa municipal', API: 'Impuesto inmobiliario', EXPENSAS: 'Expensas', GAS: 'Gas', AGUA: 'Agua',
+  ABL: 'Tasa municipal', API: 'API', EXPENSAS: 'Expensas', GAS: 'Gas', AGUA: 'Agua',
   SEGURO: 'Seguro', REPARACION: 'Reparación', HONORARIOS: 'Honorarios', OTRO: 'Otro',
 };
 
