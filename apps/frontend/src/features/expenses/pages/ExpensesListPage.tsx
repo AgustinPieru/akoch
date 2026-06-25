@@ -10,7 +10,7 @@ import ExpenseFormDialog from '../components/ExpenseFormDialog';
 import { fmtDate } from '@/lib/dateUtils';
 
 const CATEGORY_LABELS: Record<string, string> = {
-  EXPENSAS: 'Expensas', ABL: 'ABL', GAS: 'Gas', ELECTRICIDAD: 'Electricidad',
+  EXPENSAS: 'Expensas', ABL: 'Tasa municipal', API: 'Impuesto inmobiliario', GAS: 'Gas', ELECTRICIDAD: 'Electricidad',
   AGUA: 'Agua', REPARACION: 'Reparación', SEGURO: 'Seguro', HONORARIOS: 'Honorarios', OTRO: 'Otro',
 };
 

@@ -6,7 +6,7 @@ import prisma from '../../lib/prisma';
 const MONTHS = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
 const EXPENSE_CATEGORY_LABELS: Record<string, string> = {
-  AGUA: 'Agua', LUZ: 'Luz', GAS: 'Gas', EXPENSAS: 'Expensas', ABL: 'ABL',
+  AGUA: 'Agua', ELECTRICIDAD: 'Electricidad', GAS: 'Gas', EXPENSAS: 'Expensas', ABL: 'Tasa municipal', API: 'Impuesto inmobiliario',
   REPARACION: 'Reparación', SEGURO: 'Seguro', HONORARIOS: 'Honorarios', OTRO: 'Otro',
 };
 

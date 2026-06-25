@@ -136,6 +136,7 @@ enum PaymentMethod {
 enum ExpenseCategory {
   EXPENSAS
   ABL
+  API
   GAS
   ELECTRICIDAD
   AGUA
