@@ -49,6 +49,13 @@ function PropertyEditForm({ property, onSave, onCancel, isPending }: {
 }) {
   const methods = useForm({
     defaultValues: {
+      ablPaidBy: 'TENANT',
+      ordinaryExpensesPaidBy: 'TENANT',
+      extraordinaryExpensesPaidBy: 'TENANT',
+      apiPaidBy: 'TENANT',
+      gasPaidBy: 'TENANT',
+      electricityPaidBy: 'TENANT',
+      waterPaidBy: 'TENANT',
       ...property,
       owners: property.owners.map(({ owner, percentage }: { owner: any; percentage: number }) => ({
         owner,

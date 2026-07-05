@@ -104,7 +104,6 @@ export default function PropertyForm() {
             select
             label="Tipo *"
             fullWidth
-            defaultValue="DEPARTAMENTO"
             {...register('type', { required: 'Tipo requerido' })}
             error={!!errors.type}
           >
@@ -144,7 +143,6 @@ export default function PropertyForm() {
             select
             label="Provincia *"
             fullWidth
-            defaultValue="Santa Fe"
             {...register('province', { required: 'Provincia requerida' })}
             error={!!errors.province}
           >
@@ -197,7 +195,6 @@ export default function PropertyForm() {
               select
               label={label}
               fullWidth
-              defaultValue="TENANT"
               {...register(field)}
             >
               {PAID_BY.map((p) => (
