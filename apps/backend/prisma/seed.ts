@@ -326,36 +326,32 @@ async function main() {
   console.log('✅ Pagos creados');
 
   // ── LIQUIDACIONES ──────────────────────────────────────────────────────────
-  await prisma.settlement.createMany({ data: [
-    {
-      propertyId: prop1.id, contractId: c1.id,
-      periodYear: 2026, periodMonth: 3, status: 'PAID',
-      rentCollected: 325000, commissionPct: 10, commissionAmount: 32500,
-      expensesAmount: 8500, netAmount: 284000, currency: 'ARS',
-      paidAt: d('2026-03-20'), notes: 'Liquidación marzo 2026',
-    },
-    {
-      propertyId: prop1.id, contractId: c1.id,
-      periodYear: 2026, periodMonth: 4, status: 'SENT',
-      rentCollected: 325000, commissionPct: 10, commissionAmount: 32500,
-      expensesAmount: 7200, netAmount: 285300, currency: 'ARS',
-      sentAt: d('2026-04-18'), notes: 'Liquidación abril 2026',
-    },
-    {
-      propertyId: prop1.id, contractId: c1.id,
-      periodYear: 2026, periodMonth: 5, status: 'DRAFT',
-      rentCollected: 325000, commissionPct: 10, commissionAmount: 32500,
-      expensesAmount: 0, netAmount: 292500, currency: 'ARS',
-      notes: 'Liquidación mayo 2026 — pendiente de envío',
-    },
-    {
-      propertyId: prop3.id, contractId: c3.id,
-      periodYear: 2026, periodMonth: 4, status: 'PAID',
-      rentCollected: 580000, commissionPct: 10, commissionAmount: 58000,
-      expensesAmount: 15000, netAmount: 507000, currency: 'ARS',
-      paidAt: d('2026-04-22'), notes: 'Liquidación abril 2026 — local comercial',
-    },
-  ]});
+  // Agrupadas por propietario+período (owner1 es dueño de prop1 y prop3 al 100%).
+  await prisma.ownerSettlement.create({ data: {
+    ownerId: owner1.id, periodYear: 2026, periodMonth: 3, status: 'PAID', currency: 'ARS',
+    totalRent: 325000, totalCommission: 32500, totalExpenses: 8500, totalCharges: 0, netAmount: 284000,
+    paidAt: d('2026-03-20'), notes: 'Liquidación marzo 2026',
+    properties: { create: [
+      { propertyId: prop1.id, contractId: c1.id, sharePercentage: 100, rentCollected: 325000, commissionPct: 10, commissionAmount: 32500, expensesAmount: 8500, subtotal: 284000 },
+    ] },
+  }});
+  await prisma.ownerSettlement.create({ data: {
+    ownerId: owner1.id, periodYear: 2026, periodMonth: 4, status: 'PAID', currency: 'ARS',
+    totalRent: 905000, totalCommission: 90500, totalExpenses: 22200, totalCharges: 0, netAmount: 792300,
+    sentAt: d('2026-04-18'), paidAt: d('2026-04-22'), notes: 'Liquidación abril 2026',
+    properties: { create: [
+      { propertyId: prop1.id, contractId: c1.id, sharePercentage: 100, rentCollected: 325000, commissionPct: 10, commissionAmount: 32500, expensesAmount: 7200, subtotal: 285300 },
+      { propertyId: prop3.id, contractId: c3.id, sharePercentage: 100, rentCollected: 580000, commissionPct: 10, commissionAmount: 58000, expensesAmount: 15000, subtotal: 507000 },
+    ] },
+  }});
+  await prisma.ownerSettlement.create({ data: {
+    ownerId: owner1.id, periodYear: 2026, periodMonth: 5, status: 'DRAFT', currency: 'ARS',
+    totalRent: 325000, totalCommission: 32500, totalExpenses: 0, totalCharges: 0, netAmount: 292500,
+    notes: 'Liquidación mayo 2026 — pendiente de envío',
+    properties: { create: [
+      { propertyId: prop1.id, contractId: c1.id, sharePercentage: 100, rentCollected: 325000, commissionPct: 10, commissionAmount: 32500, expensesAmount: 0, subtotal: 292500 },
+    ] },
+  }});
   console.log('✅ Liquidaciones creadas');
 
   // ── GASTOS ─────────────────────────────────────────────────────────────────
