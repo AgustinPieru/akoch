@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import {
   Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-  TextField, MenuItem, Button, IconButton, Chip, Checkbox, Tooltip, Alert,
+  TextField, MenuItem, Button, IconButton, Chip, Tooltip, Alert,
 } from '@mui/material';
 import { Add, Delete } from '@mui/icons-material';
 import {
-  Settlement, ChargeCategory, ChargePaidBy, useAddCharge, useToggleChargePaid, useDeleteCharge,
+  Settlement, ChargeCategory, ChargePaidBy, useAddCharge, useDeleteCharge,
 } from '../api/useSettlements';
 
 const CATEGORY_OPTIONS: { value: ChargeCategory; label: string }[] = [
@@ -46,7 +46,6 @@ export default function SettlementChargesSection({ settlement }: Props) {
   const [amount, setAmount] = useState('');
 
   const addCharge = useAddCharge(settlement.id);
-  const togglePaid = useToggleChargePaid();
   const deleteCharge = useDeleteCharge();
 
   const formatMoney = (n: number) =>
@@ -83,7 +82,6 @@ export default function SettlementChargesSection({ settlement }: Props) {
               <TableCell>Propiedad</TableCell>
               <TableCell>Paga</TableCell>
               <TableCell align="right">Monto</TableCell>
-              <TableCell align="center">Pagado</TableCell>
               {editable && <TableCell align="center">Acciones</TableCell>}
             </TableRow>
           </TableHead>
@@ -106,15 +104,6 @@ export default function SettlementChargesSection({ settlement }: Props) {
                   </TableCell>
                   <TableCell align="right" sx={{ color: deducts ? 'error.main' : 'text.disabled' }}>
                     {deducts ? '-' : ''}{formatMoney(c.amount)}
-                  </TableCell>
-                  <TableCell align="center">
-                    <Tooltip title={c.isPaid ? 'Marcar como no pagado' : 'Marcar como pagado'}>
-                      <Checkbox
-                        size="small"
-                        checked={c.isPaid}
-                        onChange={(e) => togglePaid.mutate({ chargeId: c.id, isPaid: e.target.checked })}
-                      />
-                    </Tooltip>
                   </TableCell>
                   {editable && (
                     <TableCell align="center">

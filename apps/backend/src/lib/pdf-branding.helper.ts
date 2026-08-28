@@ -8,6 +8,7 @@ export interface AgencyProfile {
   cuit: string | null;
   address: string | null;
   phone: string | null;
+  license: string | null;
   logoPath: string | null;
 }
 
@@ -30,6 +31,7 @@ export async function getAgencyProfile(): Promise<AgencyProfile> {
     cuit: settings.agencyCuit,
     address: settings.agencyAddress,
     phone: settings.agencyPhone,
+    license: settings.agencyLicense,
     logoPath,
   };
 }
@@ -54,7 +56,11 @@ export function drawDocumentHeader(doc: InstanceType<typeof PDFDocument>, agency
   doc.font('Helvetica-Bold').fontSize(13).fillColor('#1A3C5E').text(agency.name, textX, top, { width: textWidth });
   doc.font('Helvetica').fontSize(8.5).fillColor('#666');
   if (agency.address) doc.text(agency.address, textX, doc.y + 2, { width: textWidth });
-  const contactLine = [agency.phone, agency.cuit ? `CUIT ${agency.cuit}` : null].filter(Boolean).join('  —  ');
+  const contactLine = [
+    agency.phone ? `Tel: ${agency.phone}` : null,
+    agency.license ? `Mat. ${agency.license}` : null,
+    agency.cuit ? `CUIT ${agency.cuit}` : null,
+  ].filter(Boolean).join('  —  ');
   if (contactLine) doc.text(contactLine, textX, doc.y + 2, { width: textWidth });
 
   const blockBottom = Math.max(doc.y, top + 58);

@@ -537,8 +537,6 @@ model OwnerSettlementCharge {
   // Quién afronta el pago: si es OWNER, el propietario ya lo cubre directamente y no se descuenta
   // del neto de la liquidación (igual que en Expense.paidBy).
   paidBy            PaidBy                   @default(AGENCY) @map("paid_by")
-  isPaid            Boolean                  @default(false) @map("is_paid")
-  paidAt            DateTime?                @map("paid_at")
   createdAt         DateTime                 @default(now()) @map("created_at")
   ownerSettlement   OwnerSettlement          @relation(fields: [ownerSettlementId], references: [id], onDelete: Cascade)
   property          Property?                @relation(fields: [propertyId], references: [id])
@@ -692,6 +690,7 @@ model Setting {
   agencyCuit        String?  @map("agency_cuit")
   agencyAddress     String?  @map("agency_address")
   agencyPhone       String?  @map("agency_phone")
+  agencyLicense     String?  @map("agency_license")
   logoUrl           String?  @map("logo_url")
   updatedAt         DateTime @updatedAt @map("updated_at")
 

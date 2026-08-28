@@ -3,7 +3,7 @@ import { body } from 'express-validator';
 import { authenticate } from '../../middleware/auth.middleware';
 import {
   getSettlements, getSettlement, generateSettlement, generateAllSettlements, markSent, markPaid, downloadPdf, sendWhatsApp, sendEmail,
-  addCharge, updateCharge, toggleChargePaid, deleteCharge,
+  addCharge, updateCharge, deleteCharge,
 } from './settlements.controller';
 
 const router = Router();
@@ -48,7 +48,6 @@ router.post(
   addCharge,
 );
 router.patch('/charges/:chargeId', updateCharge);
-router.patch('/charges/:chargeId/paid', toggleChargePaid);
 router.delete('/charges/:chargeId', deleteCharge);
 
 export default router;

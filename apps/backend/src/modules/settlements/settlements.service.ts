@@ -258,15 +258,6 @@ export async function updateCharge(chargeId: number, input: Partial<ChargeInput>
   return recomputeOwnerSettlementTotals(charge.ownerSettlementId);
 }
 
-export async function toggleChargePaid(chargeId: number, isPaid: boolean) {
-  const charge = await getChargeOrThrow(chargeId);
-  await prisma.ownerSettlementCharge.update({
-    where: { id: chargeId },
-    data: { isPaid, paidAt: isPaid ? new Date() : null },
-  });
-  return recomputeOwnerSettlementTotals(charge.ownerSettlementId);
-}
-
 export async function deleteCharge(chargeId: number) {
   const charge = await getChargeOrThrow(chargeId);
   await assertSettlementEditable(charge.ownerSettlementId);

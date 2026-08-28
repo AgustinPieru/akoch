@@ -17,6 +17,7 @@ export interface UpdateSettingsInput {
   agencyCuit?: string;
   agencyAddress?: string;
   agencyPhone?: string;
+  agencyLicense?: string;
 }
 
 export async function updateSettings(data: UpdateSettingsInput) {

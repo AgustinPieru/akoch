@@ -2,6 +2,7 @@ import PDFDocument from 'pdfkit';
 import { Response } from 'express';
 import prisma from '../../lib/prisma';
 import { getAgencyProfile, drawDocumentHeader, drawDocumentFooter, AgencyProfile } from '../../lib/pdf-branding.helper';
+import { amountToWordsEs } from '../../lib/numberToWordsEs';
 
 const MONTHS = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
@@ -15,6 +16,10 @@ function formatMoney(amount: number, currency: string) {
     : `$ ${Number(amount).toLocaleString('es-AR', { minimumFractionDigits: 2 })}`;
 }
 
+function formatDate(d: Date | string | null | undefined) {
+  return d ? new Date(d).toLocaleDateString('es-AR') : '—';
+}
+
 // Tipo del payment con todas las relaciones necesarias
 type PaymentWithRelations = NonNullable<Awaited<ReturnType<typeof fetchPaymentForReceipt>>>;
 
@@ -26,16 +31,21 @@ async function fetchPaymentForReceipt(paymentId: number) {
         include: {
           property: {
             include: {
-              owners: { include: { owner: { select: { firstName: true, lastName: true, businessName: true, type: true } } } },
+              owners: { include: { owner: { select: { firstName: true, lastName: true, businessName: true, type: true, cuit: true } } } },
             },
           },
           tenants: {
-            include: { tenant: { select: { firstName: true, lastName: true, businessName: true, type: true, dni: true, cuit: true } } },
+            include: { tenant: { select: { firstName: true, lastName: true, businessName: true, type: true, dni: true, cuit: true, address: true } } },
           },
         },
       },
     },
   });
+}
+
+function personName(p: { type: string; firstName: string | null; lastName: string | null; businessName: string | null }) {
+  if (p.type === 'PERSONA_JURIDICA') return p.businessName ?? '—';
+  return [p.firstName, p.lastName].filter(Boolean).join(' ') || '—';
 }
 
 // ─── Función compartida: construye el PDF en un PDFDocument ya creado ─────────
@@ -45,65 +55,86 @@ function buildReceiptDoc(doc: InstanceType<typeof PDFDocument>, payment: Payment
   const property = contract.property;
   const primaryTenant = contract.tenants.find((t) => t.isPrimary) || contract.tenants[0];
   const tenant = primaryTenant?.tenant;
-  const tenantName = tenant
-    ? tenant.type === 'PERSONA_JURIDICA'
-      ? (tenant.businessName ?? '—')
-      : [tenant.firstName, tenant.lastName].filter(Boolean).join(' ')
-    : '—';
-  const tenantDoc = tenant?.dni || tenant?.cuit || '';
+  const tenantName = tenant ? personName(tenant) : '—';
+  const tenantDoc = tenant?.cuit || tenant?.dni || '—';
+  const tenantAddress = tenant?.address || '—';
+  const ownerNames = property.owners.map((po) => personName(po.owner)).join(' / ') || '—';
+  const propertyAddress = `${property.street} ${property.number}${property.floor ? ` P${property.floor}` : ''}${property.apartment ? ` D${property.apartment}` : ''}`;
 
-  const col1 = 50;
-  const col2 = 300;
-  const lineH = 20;
+  const left = 50;
+  const right = 545;
+  const width = right - left;
+  const col2X = left + width / 2 + 10;
 
-  drawDocumentHeader(doc, agency, 'RECIBO DE ALQUILER');
+  let y = drawDocumentHeader(doc, agency, 'Recibo');
 
-  // Info del recibo
-  let y = doc.y;
-  doc.font('Helvetica-Bold').fontSize(10).fillColor('#333');
-  doc.text('Período:', col1, y); doc.font('Helvetica').text(`${MONTHS[payment.periodMonth - 1]} ${payment.periodYear}`, col1 + 80, y);
-  doc.font('Helvetica-Bold').text('N° Recibo:', col2, y); doc.font('Helvetica').text(payment.receiptNumber || `REC-${String(payment.id).padStart(6, '0')}`, col2 + 80, y);
-  y += lineH;
-  doc.font('Helvetica-Bold').text('Fecha de pago:', col1, y); doc.font('Helvetica').text(payment.paidAt ? new Date(payment.paidAt).toLocaleDateString('es-AR') : '—', col1 + 80, y);
-  doc.font('Helvetica-Bold').text('Vencimiento:', col2, y); doc.font('Helvetica').text(new Date(payment.dueDate).toLocaleDateString('es-AR'), col2 + 80, y);
-  y += lineH * 1.5;
+  // ── Fila: N° de recibo / fecha (izq) + sello "no válido como factura" (der) ──
+  const stampW = 150;
+  const stampH = 42;
+  const stampX = right - stampW;
+  const infoY = y;
 
-  // Propiedad
-  doc.moveTo(50, y).lineTo(545, y).strokeColor('#ddd').lineWidth(1).stroke();
-  y += 12;
-  doc.font('Helvetica-Bold').fontSize(11).fillColor('#1A3C5E').text('PROPIEDAD', col1, y);
-  y += lineH;
-  doc.font('Helvetica').fontSize(10).fillColor('#333');
-  doc.text(`${property.street} ${property.number}${property.floor ? ` P${property.floor}` : ''}${property.apartment ? ` D${property.apartment}` : ''}`, col1, y);
-  doc.text(`${property.city}, ${property.province || 'Buenos Aires'}`, col1, y + lineH);
-  y += lineH * 2.5;
+  doc.font('Helvetica-Bold').fontSize(12).fillColor('#1A3C5E')
+    .text(`RECIBO N° ${payment.receiptNumber || String(payment.id).padStart(8, '0')}`, left, infoY, { width: stampX - left - 10 });
+  doc.font('Helvetica').fontSize(9).fillColor('#333')
+    .text(`Fecha: ${formatDate(payment.paidAt ?? new Date())}`, left, doc.y + 5);
+  if (agency.cuit) doc.text(`CUIT: ${agency.cuit}`, left, doc.y + 2);
 
-  // Inquilino
-  doc.moveTo(50, y).lineTo(545, y).strokeColor('#ddd').lineWidth(1).stroke();
-  y += 12;
-  doc.font('Helvetica-Bold').fontSize(11).fillColor('#1A3C5E').text('INQUILINO', col1, y);
-  y += lineH;
-  doc.font('Helvetica').fontSize(10).fillColor('#333');
-  doc.text(tenantName, col1, y);
-  if (tenantDoc) doc.text(`DNI/CUIT: ${tenantDoc}`, col1, y + lineH);
-  y += lineH * 2.5;
+  doc.rect(stampX, infoY, stampW, stampH).strokeColor('#999').lineWidth(1).stroke();
+  doc.font('Helvetica-Bold').fontSize(8).fillColor('#666')
+    .text('DOCUMENTO NO VÁLIDO', stampX + 6, infoY + 12, { width: stampW - 12, align: 'center' });
+  doc.text('COMO FACTURA', stampX + 6, doc.y + 1, { width: stampW - 12, align: 'center' });
 
-  // Detalle — tabla tipo factura
-  doc.moveTo(50, y).lineTo(545, y).strokeColor('#ddd').lineWidth(1).stroke();
-  y += 12;
-  doc.font('Helvetica-Bold').fontSize(11).fillColor('#1A3C5E').text('DETALLE', col1, y);
-  y += lineH;
+  y = Math.max(doc.y, infoY + stampH) + 16;
 
-  const tableLeft = 50;
-  const tableRight = 545;
+  // ── Banner de cobro por cuenta y orden de terceros ──
+  const bannerH = 32;
+  doc.rect(left, y, width, bannerH).fill('#1A3C5E');
+  doc.fillColor('#fff').font('Helvetica-Bold').fontSize(9).text(
+    'COBRO POR CUENTA Y ORDEN DE TERCEROS. IMPORTE PARA SER ENTREGADO AL PROPIETARIO O A QUIEN CORRESPONDA.',
+    left + 10, y + 10, { width: width - 20, align: 'center' },
+  );
+  y += bannerH + 18;
+  doc.fillColor('#333');
+
+  // ── Datos del cliente / contrato / inmueble ──
+  const colWidth = col2X - left - 20;
+  const fieldRow = (fields: [string, string][], rowH = 30) => {
+    fields.forEach(([label, value], i) => {
+      const x = i === 0 ? left : col2X;
+      const w = i === 0 ? colWidth : right - col2X;
+      doc.font('Helvetica-Bold').fontSize(8).fillColor('#777').text(label.toUpperCase(), x, y, { width: w });
+      doc.font('Helvetica').fontSize(10).fillColor('#111').text(value || '—', x, y + 11, { width: w });
+    });
+    y += rowH;
+  };
+
+  fieldRow([['Cliente', tenantName], ['CUIT / DNI', tenantDoc]]);
+  fieldRow([['Dirección', tenantAddress], ['Localidad', property.city]]);
+  fieldRow([['Contrato inicio', formatDate(contract.startDate)], ['Contrato fin', formatDate(contract.endDate)]]);
+  fieldRow([['En concepto de', 'ALQUILER']]);
+  fieldRow([['Dirección del inmueble', propertyAddress], ['Localidad', property.city]]);
+  fieldRow([['Propietario', ownerNames]]);
+
+  y += 4;
+  doc.moveTo(left, y).lineTo(right, y).strokeColor('#ddd').lineWidth(1).stroke();
+  y += 14;
+
+  // ── Detalle — tabla tipo factura ──
+  const tableLeft = left;
+  const tableRight = right;
   const amountColX = 440;
   const rowH = 22;
 
+  const interest = Number(payment.interestAmount || 0);
+  const totalPaid = Number(payment.paidAmount ?? payment.expectedAmount ?? 0);
+  const rentAmount = totalPaid - interest;
+
   const rows: { label: string; amount: number; color?: string }[] = [
-    { label: `Alquiler ${MONTHS[payment.periodMonth - 1]} ${payment.periodYear}`, amount: Number(payment.paidAmount ?? 0) },
+    { label: `Correspondiente al mes de ${MONTHS[payment.periodMonth - 1]} ${payment.periodYear}`, amount: rentAmount },
   ];
-  if (payment.interestAmount && Number(payment.interestAmount) > 0) {
-    rows.push({ label: `Intereses por mora (${payment.interestDays ?? 0} días)`, amount: Number(payment.interestAmount), color: '#e65100' });
+  if (interest > 0) {
+    rows.push({ label: `Otros conceptos — intereses por mora (${payment.interestDays ?? 0} días)`, amount: interest, color: '#e65100' });
   }
 
   const tableTop = y;
@@ -128,7 +159,7 @@ function buildReceiptDoc(doc: InstanceType<typeof PDFDocument>, payment: Payment
     doc.font('Helvetica').fontSize(9).fillColor('#e65100').text(
       `(Monto esperado: ${formatMoney(Number(payment.expectedAmount), contract.currency)})`, tableLeft, y,
     );
-    y += lineH * 0.8;
+    y += 16;
   }
 
   // Caja de total destacada
@@ -136,13 +167,36 @@ function buildReceiptDoc(doc: InstanceType<typeof PDFDocument>, payment: Payment
   const totalBoxH = 32;
   doc.rect(tableLeft, y, tableRight - tableLeft, totalBoxH).fill('#1A3C5E');
   doc.fillColor('#fff').font('Helvetica-Bold').fontSize(13);
-  doc.text('TOTAL COBRADO', tableLeft + 12, y + 9);
-  doc.text(formatMoney(Number(payment.paidAmount ?? 0), contract.currency), amountColX - 30, y + 9, { width: tableRight - (amountColX - 30) - 12, align: 'right' });
-  y += totalBoxH + lineH;
+  doc.text('TOTAL RECIBO', tableLeft + 12, y + 9);
+  doc.text(formatMoney(totalPaid, contract.currency), amountColX - 30, y + 9, { width: tableRight - (amountColX - 30) - 12, align: 'right' });
+  y += totalBoxH + 20;
+  doc.fillColor('#333');
 
-  doc.font('Helvetica').fontSize(10).fillColor('#555');
-  doc.text(`Medio de pago: ${METHOD_LABELS[payment.paymentMethod ?? ''] || payment.paymentMethod || '—'}`, col1, y);
-  if (payment.notes) { y += lineH; doc.text(`Notas: ${payment.notes}`, col1, y); }
+  if (payment.notes) {
+    doc.font('Helvetica').fontSize(9).fillColor('#555').text(`Notas: ${payment.notes}`, tableLeft, y, { width });
+    y = doc.y + 12;
+  }
+
+  doc.font('Helvetica').fontSize(9).fillColor('#555')
+    .text(`Medio de pago: ${METHOD_LABELS[payment.paymentMethod ?? ''] || payment.paymentMethod || '—'}`, tableLeft, y);
+  y = doc.y + 20;
+
+  // ── Monto en palabras + firma ──
+  const currencyLabel = contract.currency === 'USD' ? 'dólares estadounidenses' : 'pesos';
+  doc.moveTo(left, y).lineTo(right, y).strokeColor('#ddd').lineWidth(1).stroke();
+  y += 14;
+  doc.font('Helvetica-Bold').fontSize(10).fillColor('#1A3C5E').text('Recibí(mos) la suma de:', tableLeft, y);
+  y = doc.y + 3;
+  doc.font('Helvetica').fontSize(10).fillColor('#333').text(
+    `${amountToWordsEs(totalPaid, currencyLabel)}.`, tableLeft, y, { width },
+  );
+  y = doc.y + 36;
+
+  const sigW = 220;
+  const sigX = tableRight - sigW;
+  doc.moveTo(sigX, y).lineTo(tableRight, y).strokeColor('#333').lineWidth(1).stroke();
+  doc.font('Helvetica').fontSize(9).fillColor('#555').text('Firma y aclaración', sigX, y + 4, { width: sigW, align: 'center' });
+  doc.font('Helvetica').fontSize(8).fillColor('#999').text('Original', tableLeft, y + 4);
 
   drawDocumentFooter(doc, agency, 'Este comprobante es válido como recibo de pago.');
 }

@@ -147,15 +147,6 @@ export async function updateCharge(req: Request, res: Response, next: NextFuncti
   }
 }
 
-export async function toggleChargePaid(req: Request, res: Response, next: NextFunction) {
-  try {
-    const result = await service.toggleChargePaid(Number(req.params.chargeId), !!req.body.isPaid);
-    res.json(result);
-  } catch (err) {
-    next(err);
-  }
-}
-
 export async function deleteCharge(req: Request, res: Response, next: NextFunction) {
   try {
     const result = await service.deleteCharge(Number(req.params.chargeId));

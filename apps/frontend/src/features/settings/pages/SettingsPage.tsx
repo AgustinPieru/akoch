@@ -12,6 +12,7 @@ interface AgencyFormValues {
   agencyCuit: string;
   agencyAddress: string;
   agencyPhone: string;
+  agencyLicense: string;
 }
 
 function AgencyProfileSection({ settings }: { settings: Settings }) {
@@ -25,6 +26,7 @@ function AgencyProfileSection({ settings }: { settings: Settings }) {
       agencyCuit: settings.agencyCuit ?? '',
       agencyAddress: settings.agencyAddress ?? '',
       agencyPhone: settings.agencyPhone ?? '',
+      agencyLicense: settings.agencyLicense ?? '',
     },
   });
 
@@ -79,6 +81,9 @@ function AgencyProfileSection({ settings }: { settings: Settings }) {
           </Grid>
           <Grid item xs={12} sm={4}>
             <TextField label="Teléfono" fullWidth {...register('agencyPhone')} />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField label="Matrícula" fullWidth {...register('agencyLicense')} placeholder="CCI N° 515" />
           </Grid>
         </Grid>
         <Box display="flex" justifyContent="flex-end" mt={2}>

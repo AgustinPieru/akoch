@@ -8,6 +8,7 @@ export interface Settings {
   agencyCuit?: string;
   agencyAddress?: string;
   agencyPhone?: string;
+  agencyLicense?: string;
   logoUrl?: string;
   updatedAt: string;
 }
@@ -22,7 +23,7 @@ export function useSettings() {
 export function useUpdateSettings() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: Partial<Pick<Settings, 'autoAdjustEnabled' | 'agencyName' | 'agencyCuit' | 'agencyAddress' | 'agencyPhone'>>) =>
+    mutationFn: (data: Partial<Pick<Settings, 'autoAdjustEnabled' | 'agencyName' | 'agencyCuit' | 'agencyAddress' | 'agencyPhone' | 'agencyLicense'>>) =>
       api.patch('/settings', data).then((r) => r.data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['settings'] }),
   });

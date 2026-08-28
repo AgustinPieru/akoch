@@ -24,8 +24,6 @@ export interface SettlementCharge {
   description: string;
   amount: number;
   paidBy: ChargePaidBy;
-  isPaid: boolean;
-  paidAt?: string | null;
 }
 
 export interface Settlement {
@@ -156,16 +154,6 @@ export function useUpdateCharge() {
   return useMutation({
     mutationFn: ({ chargeId, data }: { chargeId: number; data: Partial<ChargeInput> }) =>
       api.patch(`/settlements/charges/${chargeId}`, data).then((r) => r.data),
-    // Invalida también el listado por período (usado en la revisión masiva), no solo esta liquidación puntual.
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['settlements'] }),
-  });
-}
-
-export function useToggleChargePaid() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ chargeId, isPaid }: { chargeId: number; isPaid: boolean }) =>
-      api.patch(`/settlements/charges/${chargeId}/paid`, { isPaid }).then((r) => r.data),
     // Invalida también el listado por período (usado en la revisión masiva), no solo esta liquidación puntual.
     onSuccess: () => qc.invalidateQueries({ queryKey: ['settlements'] }),
   });

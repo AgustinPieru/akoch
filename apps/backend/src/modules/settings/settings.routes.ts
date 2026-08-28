@@ -17,6 +17,7 @@ router.patch(
     body('agencyCuit').optional().isString(),
     body('agencyAddress').optional().isString(),
     body('agencyPhone').optional().isString(),
+    body('agencyLicense').optional().isString(),
   ],
   updateSettings,
 );
