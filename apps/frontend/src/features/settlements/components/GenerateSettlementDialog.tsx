@@ -3,8 +3,7 @@ import {
   TextField, MenuItem, Grid, CircularProgress, Typography,
 } from '@mui/material';
 import { useForm } from 'react-hook-form';
-import { useGenerateSettlement } from '../api/useSettlements';
-import { useContracts } from '@/features/contracts/api/useContracts';
+import { useGenerateAllSettlements } from '../api/useSettlements';
 
 const MONTHS = [
   { value: 1, label: 'Enero' }, { value: 2, label: 'Febrero' }, { value: 3, label: 'Marzo' },
@@ -17,69 +16,44 @@ const currentDate = new Date();
 const YEAR_OPTIONS = Array.from({ length: 5 }, (_, i) => currentDate.getFullYear() - 2 + i);
 
 interface FormValues {
-  contractId: number;
   year: number;
   month: number;
-  notes: string;
 }
 
 interface Props {
-  defaultContractId?: number;
   onClose: () => void;
-  onSuccess?: (settlementId: number) => void;
+  onSuccess?: (year: number, month: number) => void;
 }
 
-export default function GenerateSettlementDialog({ defaultContractId, onClose, onSuccess }: Props) {
-  const { register, handleSubmit, formState: { errors } } = useForm<FormValues>({
+export default function GenerateSettlementDialog({ onClose, onSuccess }: Props) {
+  const { register, handleSubmit } = useForm<FormValues>({
     defaultValues: {
-      contractId: defaultContractId,
       year: currentDate.getFullYear(),
       month: currentDate.getMonth() + 1,
-      notes: '',
     },
   });
 
-  const generate = useGenerateSettlement();
-  const { data: contractsData } = useContracts({ status: 'ACTIVE', limit: 200 });
+  const generateAll = useGenerateAllSettlements();
 
   const onSubmit = async (values: FormValues) => {
-    const settlement = await generate.mutateAsync({
-      contractId: Number(values.contractId),
-      year: Number(values.year),
-      month: Number(values.month),
-      notes: values.notes || undefined,
-    });
-    onSuccess?.(settlement.id);
+    const year = Number(values.year);
+    const month = Number(values.month);
+    await generateAll.mutateAsync({ year, month });
+    onSuccess?.(year, month);
     onClose();
   };
 
   return (
     <Dialog open onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Generar liquidación</DialogTitle>
+      <DialogTitle>Generar liquidaciones del período</DialogTitle>
       <form onSubmit={handleSubmit(onSubmit)}>
         <DialogContent>
           <Typography variant="body2" color="text.secondary" mb={2}>
-            Se calculará automáticamente con los cobros recibidos y los gastos de la inmobiliaria del período.
+            Se genera automáticamente la liquidación de <strong>todos los propietarios</strong> con propiedades
+            alquiladas, agrupando sus propiedades. Las que ya estén enviadas o pagadas para este período no se
+            modifican.
           </Typography>
           <Grid container spacing={2}>
-            {!defaultContractId && (
-              <Grid item xs={12}>
-                <TextField
-                  select
-                  label="Contrato *"
-                  fullWidth
-                  defaultValue=""
-                  {...register('contractId', { required: true })}
-                  error={!!errors.contractId}
-                >
-                  {contractsData?.data.map((c) => (
-                    <MenuItem key={c.id} value={c.id}>
-                      {c.property.street} {c.property.number}, {c.property.city}
-                    </MenuItem>
-                  ))}
-                </TextField>
-              </Grid>
-            )}
             <Grid item xs={12} sm={6}>
               <TextField
                 select
@@ -102,15 +76,6 @@ export default function GenerateSettlementDialog({ defaultContractId, onClose, o
                 {YEAR_OPTIONS.map((y) => <MenuItem key={y} value={y}>{y}</MenuItem>)}
               </TextField>
             </Grid>
-            <Grid item xs={12}>
-              <TextField
-                label="Notas (opcional)"
-                fullWidth
-                multiline
-                rows={2}
-                {...register('notes')}
-              />
-            </Grid>
           </Grid>
         </DialogContent>
         <DialogActions>
@@ -118,10 +83,10 @@ export default function GenerateSettlementDialog({ defaultContractId, onClose, o
           <Button
             type="submit"
             variant="contained"
-            disabled={generate.isPending}
-            startIcon={generate.isPending ? <CircularProgress size={16} /> : undefined}
+            disabled={generateAll.isPending}
+            startIcon={generateAll.isPending ? <CircularProgress size={16} /> : undefined}
           >
-            Generar
+            Generar todas
           </Button>
         </DialogActions>
       </form>

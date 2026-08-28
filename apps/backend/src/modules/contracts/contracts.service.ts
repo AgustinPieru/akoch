@@ -1,11 +1,12 @@
 import { ContractStatus, IndexType, Prisma, UpdateFrequency } from '@prisma/client';
 import prisma from '../../lib/prisma';
 import { calculateNextAdjustmentDate } from './contracts.helpers';
+import { generateCertainPayments } from '../payments/payments.service';
 
 const contractInclude = {
   property: {
     include: {
-      owners: { include: { owner: { select: { id: true, firstName: true, lastName: true, businessName: true, type: true } } } },
+      owners: { include: { owner: { select: { id: true, firstName: true, lastName: true, businessName: true, type: true, email: true } } } },
     },
   },
   tenants: {
@@ -191,6 +192,8 @@ export async function activateContract(id: number) {
     }),
   ]);
 
+  await generateCertainPayments(id);
+
   return updated;
 }
 
@@ -248,6 +251,10 @@ export async function applyAdjustment(
       data: { expectedAmount: newAmount },
     }),
   ]);
+
+  // Con el nuevo monto y la nueva fecha de ajuste ya confirmados, generar el próximo tramo de
+  // períodos ciertos (los que había antes del ajuste no se tocan, createMany los ignora).
+  await generateCertainPayments(id);
 
   return updated;
 }

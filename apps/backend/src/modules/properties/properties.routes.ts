@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { body } from 'express-validator';
 import { authenticate } from '../../middleware/auth.middleware';
-import { uploadSingle } from '../../middleware/upload.middleware';
+import { uploadPropertyMedia } from '../../middleware/upload.middleware';
 import { createProperty, deleteProperty, getProperties, getProperty, updateProperty } from './properties.controller';
 import { getPhotos, uploadPhoto, removePhoto } from './photos.controller';
 
@@ -36,7 +36,7 @@ router.delete('/:id', deleteProperty);
 
 // Photos
 router.get('/:id/photos', getPhotos);
-router.post('/:id/photos', uploadSingle, uploadPhoto);
+router.post('/:id/photos', uploadPropertyMedia, uploadPhoto);
 router.delete('/:id/photos/:photoId', removePhoto);
 
 export default router;

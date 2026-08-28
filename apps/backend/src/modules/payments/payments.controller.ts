@@ -33,7 +33,7 @@ export async function getPayment(req: Request, res: Response, next: NextFunction
 
 export async function generatePayments(req: Request, res: Response, next: NextFunction) {
   try {
-    const payments = await service.generatePaymentsForContract(Number(req.params.contractId));
+    const payments = await service.generateCertainPayments(Number(req.params.contractId));
     res.status(201).json(payments);
   } catch (err) {
     next(err);

@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import {
   Box, Grid, Card, CardContent, Typography, Chip,
   Alert, List, ListItemText, Divider, ListItemButton,
-  Table, TableBody, TableCell, TableHead, TableRow, LinearProgress,
+  Table, TableBody, TableCell, TableContainer, TableHead, TableRow, LinearProgress,
   MenuItem, TextField, Skeleton,
 } from '@mui/material';
 import {
@@ -34,7 +34,8 @@ interface ContractExpiringItem {
 }
 interface DraftSettlementItem {
   id: number; periodYear: number; periodMonth: number; netAmount: number; currency: string;
-  property: { street: string; number: string; city: string };
+  owner: { type: string; firstName?: string; lastName?: string; businessName?: string };
+  properties: { property: { street: string; number: string; city: string } }[];
 }
 interface MonthEarning {
   month: number;
@@ -349,22 +350,27 @@ export default function DashboardPage() {
               <Grid item xs={12} md={6}>
                 <SectionCard title="Liquidaciones sin enviar" icon={<AccountBalance color="info" fontSize="small" />}>
                   <List disablePadding>
-                    {data.draftSettlements.map((s, i) => (
-                      <Box key={s.id}>
-                        {i > 0 && <Divider />}
-                        <ListItemButton disableGutters sx={{ py: 0.75 }} onClick={() => navigate(ROUTES.SETTLEMENT_DETAIL(s.id))}>
-                          <ListItemText
-                            primary={`${s.property.street} ${s.property.number}, ${s.property.city}`}
-                            secondary={`${MONTHS_SHORT[s.periodMonth - 1]} ${s.periodYear}`}
-                            primaryTypographyProps={{ variant: 'body2', fontWeight: 500 }}
-                            secondaryTypographyProps={{ variant: 'caption' }}
-                          />
-                          <Typography variant="body2" fontWeight={600} color="success.main">
-                            {formatMoney(s.netAmount, s.currency)}
-                          </Typography>
-                        </ListItemButton>
-                      </Box>
-                    ))}
+                    {data.draftSettlements.map((s, i) => {
+                      const propLabel = s.properties.length === 1
+                        ? `${s.properties[0].property.street} ${s.properties[0].property.number}, ${s.properties[0].property.city}`
+                        : `${s.properties.length} propiedades`;
+                      return (
+                        <Box key={s.id}>
+                          {i > 0 && <Divider />}
+                          <ListItemButton disableGutters sx={{ py: 0.75 }} onClick={() => navigate(ROUTES.SETTLEMENT_DETAIL(s.id))}>
+                            <ListItemText
+                              primary={`${tenantName(s.owner)} — ${propLabel}`}
+                              secondary={`${MONTHS_SHORT[s.periodMonth - 1]} ${s.periodYear}`}
+                              primaryTypographyProps={{ variant: 'body2', fontWeight: 500 }}
+                              secondaryTypographyProps={{ variant: 'caption' }}
+                            />
+                            <Typography variant="body2" fontWeight={600} color="success.main">
+                              {formatMoney(s.netAmount, s.currency)}
+                            </Typography>
+                          </ListItemButton>
+                        </Box>
+                      );
+                    })}
                   </List>
                 </SectionCard>
               </Grid>
@@ -419,12 +425,12 @@ export default function DashboardPage() {
             <Box mt={3}>
               <Card>
                 <CardContent sx={{ pb: 1 }}>
-                  <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                  <Box display="flex" justifyContent="space-between" alignItems="center" mb={2} flexWrap="wrap" gap={2}>
                     <Box display="flex" alignItems="center" gap={1}>
                       <TrendingUp color="success" fontSize="small" />
                       <Typography variant="h6">Ganancias {earningsYear}</Typography>
                     </Box>
-                    <Box display="flex" gap={3} alignItems="center">
+                    <Box display="flex" gap={3} alignItems="center" flexWrap="wrap">
                       <Box textAlign="right">
                         <Typography variant="caption" color="text.secondary">Comisiones acum.</Typography>
                         <Typography variant="body1" fontWeight={700} color="success.main">
@@ -456,6 +462,7 @@ export default function DashboardPage() {
 
                 <Divider />
 
+                <TableContainer>
                 <Table size="small">
                   <TableHead>
                     <TableRow sx={{ '& th': { fontWeight: 600, bgcolor: 'grey.50' } }}>
@@ -524,6 +531,7 @@ export default function DashboardPage() {
                     })}
                   </TableBody>
                 </Table>
+                </TableContainer>
 
                 <Divider />
                 <Box px={2} py={1.5} display="flex" justifyContent="flex-end" gap={4}>

@@ -337,51 +337,41 @@ export async function getAdjustmentsReport(year: number) {
 // ─── Liquidaciones por propietario ────────────────────────────────────────────
 
 export async function getSettlementsReport(year: number, ownerId?: number) {
-  type SettlementWithProperty = Awaited<ReturnType<typeof prisma.settlement.findMany<{
-    include: { property: { select: { id: true; street: true; number: true; city: true; owners: { include: { owner: { select: { id: true; firstName: true; lastName: true; businessName: true; type: true } } } } } } }
-  }>>>[number];
-
-  const settlements = await prisma.settlement.findMany({
+  const settlements = await prisma.ownerSettlement.findMany({
     where: {
       periodYear: year,
-      ...(ownerId && {
-        property: { owners: { some: { ownerId } } },
-      }),
+      ...(ownerId && { ownerId }),
     },
     include: {
-      property: {
-        select: {
-          id: true, street: true, number: true, city: true,
-          owners: {
-            include: { owner: { select: { id: true, firstName: true, lastName: true, businessName: true, type: true } } },
-          },
-        },
+      owner: { select: { id: true, firstName: true, lastName: true, businessName: true, type: true } },
+      properties: {
+        include: { property: { select: { id: true, street: true, number: true, city: true } } },
       },
     },
     orderBy: [{ periodYear: 'desc' }, { periodMonth: 'desc' }],
   });
 
+  type SettlementWithOwner = (typeof settlements)[number];
+
   const byOwner = new Map<number, {
     owner: { id: number; firstName?: string | null; lastName?: string | null; businessName?: string | null; type: string };
-    settlements: SettlementWithProperty[];
+    settlements: SettlementWithOwner[];
     totalNet: number;
     totalCommissions: number;
   }>();
 
   for (const s of settlements) {
-    const ownerEntry = s.property.owners[0]?.owner;
-    if (!ownerEntry) continue;
-    const entry = byOwner.get(ownerEntry.id) ?? { owner: ownerEntry, settlements: [] as SettlementWithProperty[], totalNet: 0, totalCommissions: 0 };
+    const entry = byOwner.get(s.ownerId) ?? { owner: s.owner, settlements: [] as SettlementWithOwner[], totalNet: 0, totalCommissions: 0 };
     entry.settlements.push(s);
     entry.totalNet += Number(s.netAmount);
-    entry.totalCommissions += Number(s.commissionAmount);
-    byOwner.set(ownerEntry.id, entry);
+    entry.totalCommissions += Number(s.totalCommission);
+    byOwner.set(s.ownerId, entry);
   }
 
   const summary = {
     total: settlements.length,
-    totalNet: settlements.reduce((s, e) => s + Number(e.netAmount), 0),
-    totalCommissions: settlements.reduce((s, e) => s + Number(e.commissionAmount), 0),
+    totalNet: settlements.reduce((sum, s) => sum + Number(s.netAmount), 0),
+    totalCommissions: settlements.reduce((sum, s) => sum + Number(s.totalCommission), 0),
   };
 
   return { year, summary, settlements, byOwner: Array.from(byOwner.values()) };

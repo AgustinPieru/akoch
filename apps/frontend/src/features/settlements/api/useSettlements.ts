@@ -1,31 +1,55 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 
-export interface Settlement {
+export interface SettlementProperty {
   id: number;
   propertyId: number;
-  contractId: number;
-  periodYear: number;
-  periodMonth: number;
-  status: 'DRAFT' | 'SENT' | 'PAID';
+  contractId?: number | null;
+  sharePercentage: number;
   rentCollected: number;
   commissionPct: number;
   commissionAmount: number;
   expensesAmount: number;
-  netAmount: number;
+  subtotal: number;
+  property: { id: number; street: string; number: string; city: string };
+}
+
+export type ChargeCategory = 'IMPUESTO' | 'SERVICIO' | 'TASA' | 'OTRO';
+export type ChargePaidBy = 'AGENCY' | 'OWNER' | 'TENANT' | 'SHARED' | 'N_A';
+
+export interface SettlementCharge {
+  id: number;
+  propertyId?: number | null;
+  category: ChargeCategory;
+  description: string;
+  amount: number;
+  paidBy: ChargePaidBy;
+  isPaid: boolean;
+  paidAt?: string | null;
+}
+
+export interface Settlement {
+  id: number;
+  ownerId: number;
+  periodYear: number;
+  periodMonth: number;
+  status: 'DRAFT' | 'SENT' | 'PAID';
   currency: string;
+  totalRent: number;
+  totalCommission: number;
+  totalExpenses: number;
+  totalCharges: number;
+  netAmount: number;
+  notes?: string;
   sentAt?: string;
   paidAt?: string;
-  notes?: string;
   createdAt: string;
-  property: {
-    id: number; street: string; number: string; city: string;
-    owners: { owner: { id: number; firstName?: string; lastName?: string; businessName?: string; type: string; cbu?: string; bankName?: string; phone?: string | null; email?: string | null } }[];
+  owner: {
+    id: number; firstName?: string; lastName?: string; businessName?: string; type: string;
+    cbu?: string; bankName?: string; phone?: string | null; email?: string | null;
   };
-  contract: {
-    id: number; adminCommissionPct: number; currency: string;
-    tenants: { isPrimary: boolean; tenant: { firstName?: string; lastName?: string; businessName?: string; type: string } }[];
-  };
+  properties: SettlementProperty[];
+  charges: SettlementCharge[];
 }
 
 export interface SettlementsResponse {
@@ -54,8 +78,22 @@ export function useSettlement(id: number) {
 export function useGenerateSettlement() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: { contractId: number; year: number; month: number; notes?: string }) =>
+    mutationFn: (data: { ownerId: number; year: number; month: number; notes?: string }) =>
       api.post('/settlements/generate', data).then((r) => r.data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['settlements'] }),
+  });
+}
+
+export interface GenerateAllResult {
+  settlements: Settlement[];
+  lockedOwnerIds: number[];
+}
+
+export function useGenerateAllSettlements() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { year: number; month: number }) =>
+      api.post<GenerateAllResult>('/settlements/generate-all', data).then((r) => r.data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['settlements'] }),
   });
 }
@@ -90,6 +128,54 @@ export function useSendSettlementEmail() {
   return useMutation({
     mutationFn: ({ id, email }: { id: number; email: string }) =>
       api.post(`/settlements/${id}/send/email`, { email }).then((r) => r.data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['settlements'] }),
+  });
+}
+
+// ─── Cargos ad-hoc (impuestos, servicios, tasas, otros) ───────────────────────
+
+export interface ChargeInput {
+  propertyId?: number;
+  category: ChargeCategory;
+  description: string;
+  amount: number;
+  paidBy?: ChargePaidBy;
+}
+
+export function useAddCharge(settlementId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: ChargeInput) => api.post(`/settlements/${settlementId}/charges`, data).then((r) => r.data),
+    // Invalida también el listado por período (usado en la revisión masiva), no solo esta liquidación puntual.
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['settlements'] }),
+  });
+}
+
+export function useUpdateCharge() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ chargeId, data }: { chargeId: number; data: Partial<ChargeInput> }) =>
+      api.patch(`/settlements/charges/${chargeId}`, data).then((r) => r.data),
+    // Invalida también el listado por período (usado en la revisión masiva), no solo esta liquidación puntual.
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['settlements'] }),
+  });
+}
+
+export function useToggleChargePaid() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ chargeId, isPaid }: { chargeId: number; isPaid: boolean }) =>
+      api.patch(`/settlements/charges/${chargeId}/paid`, { isPaid }).then((r) => r.data),
+    // Invalida también el listado por período (usado en la revisión masiva), no solo esta liquidación puntual.
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['settlements'] }),
+  });
+}
+
+export function useDeleteCharge() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (chargeId: number) => api.delete(`/settlements/charges/${chargeId}`).then((r) => r.data),
+    // Invalida también el listado por período (usado en la revisión masiva), no solo esta liquidación puntual.
     onSuccess: () => qc.invalidateQueries({ queryKey: ['settlements'] }),
   });
 }

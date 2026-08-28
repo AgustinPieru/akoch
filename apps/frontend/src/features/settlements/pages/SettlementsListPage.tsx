@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Box, Typography, Button, Paper, Table, TableBody, TableCell, TableHead,
+  Box, Typography, Button, Paper, Table, TableBody, TableCell, TableContainer, TableHead,
   TableRow, TablePagination, Chip, MenuItem, TextField, CircularProgress, Alert,
   IconButton, Tooltip, InputAdornment,
 } from '@mui/material';
@@ -62,7 +62,7 @@ export default function SettlementsListPage() {
 
   return (
     <Box>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3} flexWrap="wrap" gap={2}>
         <Typography variant="h5" fontWeight={700}>Liquidaciones</Typography>
         <Button variant="contained" startIcon={<Add />} onClick={() => setDialogOpen(true)}>
           Nueva liquidación
@@ -101,14 +101,16 @@ export default function SettlementsListPage() {
 
       {data && (
         <Paper>
+          <TableContainer>
           <Table size="small">
             <TableHead>
               <TableRow sx={{ '& th': { fontWeight: 600 } }}>
                 <TableCell>Período</TableCell>
-                <TableCell>Propiedad</TableCell>
+                <TableCell>Propietario</TableCell>
+                <TableCell>Propiedades</TableCell>
                 <TableCell align="right">Cobrado</TableCell>
                 <TableCell align="right">Comisión</TableCell>
-                <TableCell align="right">Gastos</TableCell>
+                <TableCell align="right">Gastos y cargos</TableCell>
                 <TableCell align="right">Neto</TableCell>
                 <TableCell>Estado</TableCell>
                 <TableCell align="center">PDF</TableCell>
@@ -117,13 +119,17 @@ export default function SettlementsListPage() {
             <TableBody>
               {data.data.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} align="center" sx={{ py: 4, color: 'text.secondary' }}>
+                  <TableCell colSpan={9} align="center" sx={{ py: 4, color: 'text.secondary' }}>
                     No hay liquidaciones.
                   </TableCell>
                 </TableRow>
               ) : (
                 data.data.map((s) => {
                   const st = STATUS_CONFIG[s.status];
+                  const ownerName = s.owner.type === 'PERSONA_JURIDICA'
+                    ? s.owner.businessName
+                    : [s.owner.firstName, s.owner.lastName].filter(Boolean).join(' ');
+                  const expensesAndCharges = s.totalExpenses + s.totalCharges;
                   return (
                     <TableRow
                       key={s.id} hover sx={{ cursor: 'pointer' }}
@@ -134,16 +140,23 @@ export default function SettlementsListPage() {
                           {MONTHS_SHORT[s.periodMonth - 1]} {s.periodYear}
                         </Typography>
                       </TableCell>
+                      <TableCell>{ownerName}</TableCell>
                       <TableCell>
-                        <Typography variant="body2">{s.property.street} {s.property.number}</Typography>
-                        <Typography variant="caption" color="text.secondary">{s.property.city}</Typography>
+                        {s.properties.length === 1 ? (
+                          <>
+                            <Typography variant="body2">{s.properties[0].property.street} {s.properties[0].property.number}</Typography>
+                            <Typography variant="caption" color="text.secondary">{s.properties[0].property.city}</Typography>
+                          </>
+                        ) : (
+                          <Typography variant="body2">{s.properties.length} propiedades</Typography>
+                        )}
                       </TableCell>
-                      <TableCell align="right">{formatMoney(s.rentCollected, s.currency)}</TableCell>
+                      <TableCell align="right">{formatMoney(s.totalRent, s.currency)}</TableCell>
                       <TableCell align="right" sx={{ color: 'error.main' }}>
-                        -{formatMoney(s.commissionAmount, s.currency)}
+                        -{formatMoney(s.totalCommission, s.currency)}
                       </TableCell>
                       <TableCell align="right" sx={{ color: 'error.main' }}>
-                        {s.expensesAmount > 0 ? `-${formatMoney(s.expensesAmount, s.currency)}` : '—'}
+                        {expensesAndCharges > 0 ? `-${formatMoney(expensesAndCharges, s.currency)}` : '—'}
                       </TableCell>
                       <TableCell align="right" sx={{ fontWeight: 700, color: s.netAmount >= 0 ? 'success.main' : 'error.main' }}>
                         {formatMoney(s.netAmount, s.currency)}
@@ -166,6 +179,7 @@ export default function SettlementsListPage() {
               )}
             </TableBody>
           </Table>
+          </TableContainer>
           <TablePagination
             component="div" count={data.total} page={page}
             onPageChange={(_, p) => setPage(p)} rowsPerPage={rowsPerPage}
@@ -178,7 +192,7 @@ export default function SettlementsListPage() {
       {dialogOpen && (
         <GenerateSettlementDialog
           onClose={() => setDialogOpen(false)}
-          onSuccess={(id) => navigate(ROUTES.SETTLEMENT_DETAIL(id))}
+          onSuccess={(year, month) => navigate(ROUTES.SETTLEMENTS_PERIOD(year, month))}
         />
       )}
     </Box>

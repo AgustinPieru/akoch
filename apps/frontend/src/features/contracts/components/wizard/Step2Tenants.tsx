@@ -2,10 +2,11 @@ import { useState } from 'react';
 import {
   Box, Typography, TextField, InputAdornment, CircularProgress,
   List, ListItem, ListItemText, ListItemSecondaryAction, Checkbox,
-  Chip, IconButton, Alert, Divider, Tooltip,
+  Chip, IconButton, Alert, Divider, Tooltip, Button,
 } from '@mui/material';
-import { Search, Star, StarBorder } from '@mui/icons-material';
+import { Search, Star, StarBorder, Add } from '@mui/icons-material';
 import { useTenants } from '@/features/tenants/api/useTenants';
+import InlineTenantCreateForm from '@/features/tenants/components/InlineTenantCreateForm';
 
 export interface SelectedTenant {
   tenantId: number;
@@ -20,6 +21,7 @@ interface Props {
 
 export default function Step2Tenants({ value, onChange }: Props) {
   const [search, setSearch] = useState('');
+  const [creating, setCreating] = useState(false);
   const { data, isLoading } = useTenants({ search, status: 'ACTIVE', limit: 50 });
 
   const selectedIds = value.map((t) => t.tenantId);
@@ -73,58 +75,77 @@ export default function Step2Tenants({ value, onChange }: Props) {
         </Box>
       )}
 
-      <TextField
-        placeholder="Buscar por nombre, DNI o email..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        size="small"
-        fullWidth
-        sx={{ mb: 2 }}
-        InputProps={{ startAdornment: <InputAdornment position="start"><Search fontSize="small" /></InputAdornment> }}
-      />
-
-      {isLoading && <Box display="flex" justifyContent="center" py={4}><CircularProgress /></Box>}
-
-      {data?.data.length === 0 && !isLoading && (
-        <Alert severity="info">No se encontraron inquilinos activos.</Alert>
-      )}
-
-      <List disablePadding>
-        {data?.data.map((tenant) => {
-          const isSelected = selectedIds.includes(tenant.id);
-          const isPrimary = primaryId === tenant.id;
-          const name = getDisplayName(tenant);
-
-          return (
-            <ListItem
-              key={tenant.id}
-              divider
-              sx={{ cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' } }}
-              onClick={() => toggleTenant(tenant)}
+      {creating ? (
+        <InlineTenantCreateForm
+          onCreated={(tenant) => { toggleTenant(tenant); setSearch(''); setCreating(false); }}
+          onCancel={() => setCreating(false)}
+        />
+      ) : (
+        <>
+          <Box display="flex" gap={2} mb={2}>
+            <TextField
+              placeholder="Buscar por nombre, DNI o email..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              size="small"
+              fullWidth
+              InputProps={{ startAdornment: <InputAdornment position="start"><Search fontSize="small" /></InputAdornment> }}
+            />
+            <Button
+              size="small"
+              variant="outlined"
+              startIcon={<Add />}
+              onClick={() => setCreating(true)}
+              sx={{ whiteSpace: 'nowrap', flexShrink: 0 }}
             >
-              <Checkbox checked={isSelected} size="small" sx={{ mr: 1 }} />
-              <ListItemText
-                primary={name}
-                secondary={[tenant.dni || tenant.cuit, tenant.email, tenant.phone].filter(Boolean).join(' · ')}
-                primaryTypographyProps={{ fontWeight: isSelected ? 600 : 400 }}
-              />
-              <ListItemSecondaryAction>
-                {isSelected && (
-                  <Tooltip title={isPrimary ? 'Titular principal' : 'Marcar como titular'}>
-                    <IconButton
-                      size="small"
-                      onClick={(e) => { e.stopPropagation(); setPrimary(tenant.id); }}
-                      color={isPrimary ? 'warning' : 'default'}
-                    >
-                      {isPrimary ? <Star fontSize="small" /> : <StarBorder fontSize="small" />}
-                    </IconButton>
-                  </Tooltip>
-                )}
-              </ListItemSecondaryAction>
-            </ListItem>
-          );
-        })}
-      </List>
+              Crear inquilino
+            </Button>
+          </Box>
+
+          {isLoading && <Box display="flex" justifyContent="center" py={4}><CircularProgress /></Box>}
+
+          {data?.data.length === 0 && !isLoading && (
+            <Alert severity="info">No se encontraron inquilinos activos.</Alert>
+          )}
+
+          <List disablePadding>
+            {data?.data.map((tenant) => {
+              const isSelected = selectedIds.includes(tenant.id);
+              const isPrimary = primaryId === tenant.id;
+              const name = getDisplayName(tenant);
+
+              return (
+                <ListItem
+                  key={tenant.id}
+                  divider
+                  sx={{ cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' } }}
+                  onClick={() => toggleTenant(tenant)}
+                >
+                  <Checkbox checked={isSelected} size="small" sx={{ mr: 1 }} />
+                  <ListItemText
+                    primary={name}
+                    secondary={[tenant.dni || tenant.cuit, tenant.email, tenant.phone].filter(Boolean).join(' · ')}
+                    primaryTypographyProps={{ fontWeight: isSelected ? 600 : 400 }}
+                  />
+                  <ListItemSecondaryAction>
+                    {isSelected && (
+                      <Tooltip title={isPrimary ? 'Titular principal' : 'Marcar como titular'}>
+                        <IconButton
+                          size="small"
+                          onClick={(e) => { e.stopPropagation(); setPrimary(tenant.id); }}
+                          color={isPrimary ? 'warning' : 'default'}
+                        >
+                          {isPrimary ? <Star fontSize="small" /> : <StarBorder fontSize="small" />}
+                        </IconButton>
+                      </Tooltip>
+                    )}
+                  </ListItemSecondaryAction>
+                </ListItem>
+              );
+            })}
+          </List>
+        </>
+      )}
     </Box>
   );
 }

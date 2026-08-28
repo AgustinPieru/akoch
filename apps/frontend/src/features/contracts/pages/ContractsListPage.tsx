@@ -63,7 +63,7 @@ export default function ContractsListPage() {
 
   return (
     <Box>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3} flexWrap="wrap" gap={2}>
         <Typography variant="h5" fontWeight={700}>Contratos</Typography>
         <Button variant="contained" startIcon={<Add />} onClick={() => navigate(ROUTES.CONTRACT_NEW)}>
           Nuevo contrato

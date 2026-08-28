@@ -3,6 +3,7 @@ import { MessageMedia } from 'whatsapp-web.js';
 import { getClient } from './whatsapp.client';
 import { generateReceiptBuffer } from '../payments/receipt.service';
 import { generateSettlementBuffer } from '../settlements/settlement-pdf.service';
+import { generateContractSummaryBuffer, getContractEmailAttachments } from '../contracts/contract-pdf.service';
 
 function getResend() {
   const key = process.env.RESEND_API_KEY;
@@ -117,4 +118,31 @@ export async function sendSettlementViaEmail(settlementId: number, email: string
 
   if (result.error) throw { status: 500, message: result.error.message, code: 'EMAIL_ERROR' };
   return { sent: true, email, period, messageId: result.data?.id };
+}
+
+// ─── Contrato ─────────────────────────────────────────────────────────────────
+
+export async function sendContractViaEmail(contractId: number, emails: string[]) {
+  const resend = getResend();
+  const [{ buffer, filename, propertyLabel }, { attachments: extraAttachments, skipped }] = await Promise.all([
+    generateContractSummaryBuffer(contractId),
+    getContractEmailAttachments(contractId),
+  ]);
+
+  const result = await resend.emails.send({
+    from: fromAddress(),
+    to: emails,
+    subject: `Contrato de alquiler — ${propertyLabel}`,
+    html: `
+      <p>Hola,</p>
+      <p>Adjuntamos el resumen del contrato de alquiler de <strong>${propertyLabel}</strong>${extraAttachments.length ? ', junto con fotos/videos de la propiedad y documentación asociada' : ''}.</p>
+      <p>Ante cualquier consulta no dudes en contactarnos.</p>
+      <br/>
+      <p style="color:#888;font-size:12px">Este mensaje fue generado automáticamente.</p>
+    `,
+    attachments: [{ filename, content: buffer }, ...extraAttachments],
+  });
+
+  if (result.error) throw { status: 500, message: result.error.message, code: 'EMAIL_ERROR' };
+  return { sent: true, emails, propertyLabel, messageId: result.data?.id, skipped };
 }

@@ -2,6 +2,8 @@ import { Response } from 'express';
 import { validationResult } from 'express-validator';
 import { AuthRequest } from '../../middleware/auth.middleware';
 import * as service from './contracts.service';
+import { generateContractSummaryPdf } from './contract-pdf.service';
+import { sendContractViaEmail } from '../notifications/notification.service';
 
 export async function getContracts(req: AuthRequest, res: Response): Promise<void> {
   try {
@@ -104,6 +106,28 @@ export async function finalizeContract(req: AuthRequest, res: Response): Promise
   try {
     const contract = await service.finalizeContract(parseInt(req.params.id));
     res.json(contract);
+  } catch (err: any) {
+    res.status(err.status || 500).json({ error: err.message, code: err.code });
+  }
+}
+
+export async function downloadContractPdf(req: AuthRequest, res: Response): Promise<void> {
+  try {
+    await generateContractSummaryPdf(parseInt(req.params.id), res);
+  } catch (err: any) {
+    res.status(err.status || 500).json({ error: err.message, code: err.code });
+  }
+}
+
+export async function sendContractEmail(req: AuthRequest, res: Response): Promise<void> {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    res.status(422).json({ error: 'Datos inválidos', code: 'VALIDATION_ERROR', details: errors.array() });
+    return;
+  }
+  try {
+    const result = await sendContractViaEmail(parseInt(req.params.id), req.body.emails);
+    res.json(result);
   } catch (err: any) {
     res.status(err.status || 500).json({ error: err.message, code: err.code });
   }

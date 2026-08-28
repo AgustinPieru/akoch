@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import {
-  Box, Typography, Tabs, Tab, Paper, Table, TableBody, TableCell, TableHead,
+  Box, Typography, Tabs, Tab, Paper, Table, TableBody, TableCell, TableContainer, TableHead,
   TableRow, TablePagination, Chip, IconButton, Tooltip, TextField, MenuItem,
   CircularProgress, Alert, InputAdornment,
 } from '@mui/material';
@@ -54,8 +54,7 @@ function PaymentTenantName(payment: Payment) {
 }
 
 function SettlementOwnerName(s: Settlement) {
-  const o = s.property.owners[0]?.owner;
-  if (!o) return '—';
+  const o = s.owner;
   return o.type === 'PERSONA_JURIDICA'
     ? (o.businessName ?? '—')
     : [o.firstName, o.lastName].filter(Boolean).join(' ') || '—';
@@ -107,6 +106,7 @@ function PaymentReceiptsTab() {
 
       {data && (
         <Paper>
+          <TableContainer>
           <Table size="small">
             <TableHead>
               <TableRow sx={{ '& th': { fontWeight: 600 } }}>
@@ -172,6 +172,7 @@ function PaymentReceiptsTab() {
               )}
             </TableBody>
           </Table>
+          </TableContainer>
           <TablePagination
             component="div" count={data.total} page={page}
             onPageChange={(_, p) => setPage(p)} rowsPerPage={rowsPerPage}
@@ -229,6 +230,7 @@ function SettlementReceiptsTab() {
 
       {data && (
         <Paper>
+          <TableContainer>
           <Table size="small">
             <TableHead>
               <TableRow sx={{ '& th': { fontWeight: 600 } }}>
@@ -261,8 +263,14 @@ function SettlementReceiptsTab() {
                         <Typography variant="body2">{SettlementOwnerName(s)}</Typography>
                       </TableCell>
                       <TableCell>
-                        <Typography variant="body2">{s.property.street} {s.property.number}</Typography>
-                        <Typography variant="caption" color="text.secondary">{s.property.city}</Typography>
+                        {s.properties.length === 1 ? (
+                          <>
+                            <Typography variant="body2">{s.properties[0].property.street} {s.properties[0].property.number}</Typography>
+                            <Typography variant="caption" color="text.secondary">{s.properties[0].property.city}</Typography>
+                          </>
+                        ) : (
+                          <Typography variant="body2">{s.properties.length} propiedades</Typography>
+                        )}
                       </TableCell>
                       <TableCell align="right" sx={{ fontWeight: 700, color: s.netAmount >= 0 ? 'success.main' : 'error.main' }}>
                         {formatMoney(s.netAmount, s.currency)}
@@ -283,6 +291,7 @@ function SettlementReceiptsTab() {
               )}
             </TableBody>
           </Table>
+          </TableContainer>
           <TablePagination
             component="div" count={data.total} page={page}
             onPageChange={(_, p) => setPage(p)} rowsPerPage={rowsPerPage}

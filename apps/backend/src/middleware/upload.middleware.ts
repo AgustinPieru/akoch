@@ -20,31 +20,43 @@ const storage = multer.diskStorage({
   },
 });
 
-const ALLOWED_MIME_TYPES = [
-  'image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/heic', 'image/heif',
+const IMAGE_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/heic', 'image/heif'];
+const VIDEO_MIME_TYPES = ['video/mp4', 'video/quicktime', 'video/webm', 'video/x-m4v'];
+const DOCUMENT_MIME_TYPES = [
   'application/pdf',
   'application/msword',
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
 ];
 
-function fileFilter(_req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) {
-  if (ALLOWED_MIME_TYPES.includes(file.mimetype)) {
-    cb(null, true);
-  } else {
-    const err = new Error(`Tipo de archivo no permitido: ${file.mimetype}`) as Error & { status: number };
-    err.status = 400;
-    cb(err);
-  }
+const ALLOWED_MIME_TYPES = [...IMAGE_MIME_TYPES, ...DOCUMENT_MIME_TYPES];
+
+function makeFileFilter(allowed: string[]) {
+  return (_req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+    if (allowed.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      const err = new Error(`Tipo de archivo no permitido: ${file.mimetype}`) as Error & { status: number };
+      err.status = 400;
+      cb(err);
+    }
+  };
 }
 
 export const uploadSingle = multer({
   storage,
   limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
-  fileFilter,
+  fileFilter: makeFileFilter(ALLOWED_MIME_TYPES),
 }).single('file');
 
 export const uploadMultiple = multer({
   storage,
   limits: { fileSize: 10 * 1024 * 1024 },
-  fileFilter,
+  fileFilter: makeFileFilter(ALLOWED_MIME_TYPES),
 }).array('files', 20);
+
+// Fotos y videos de propiedades: límite más alto que el resto de los adjuntos por el peso de los videos.
+export const uploadPropertyMedia = multer({
+  storage,
+  limits: { fileSize: 100 * 1024 * 1024 }, // 100 MB
+  fileFilter: makeFileFilter([...IMAGE_MIME_TYPES, ...VIDEO_MIME_TYPES]),
+}).single('file');

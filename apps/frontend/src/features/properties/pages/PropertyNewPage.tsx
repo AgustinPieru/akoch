@@ -1,13 +1,17 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Box, Button, Card, CardContent, Typography, Alert } from '@mui/material';
 import { ArrowBack } from '@mui/icons-material';
 import { useForm, FormProvider } from 'react-hook-form';
 import PropertyForm from '../components/PropertyForm';
+import PropertyMediaStaging, { StagedMedia } from '../components/PropertyMediaStaging';
 import { useCreateProperty } from '../api/useProperties';
 import { ROUTES } from '@/router/routes';
+import api from '@/lib/axios';
 
 export default function PropertyNewPage() {
   const navigate = useNavigate();
+  const [stagedMedia, setStagedMedia] = useState<StagedMedia[]>([]);
   const methods = useForm({
     defaultValues: {
       type: 'DEPARTAMENTO',
@@ -34,6 +38,20 @@ export default function PropertyNewPage() {
         })),
       };
       const property = await mutateAsync(payload);
+
+      for (const sf of stagedMedia) {
+        const fd = new FormData();
+        fd.append('file', sf.file);
+        fd.append('type', 'GENERAL');
+        try {
+          await api.post(`/properties/${(property as any).id}/photos`, fd, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+          });
+        } catch {
+          // La propiedad ya quedó creada; las fotos que fallen se pueden reintentar desde el detalle.
+        }
+      }
+
       navigate(ROUTES.PROPERTY_DETAIL((property as any).id));
     } catch {
       // error shown via Alert
@@ -59,6 +77,7 @@ export default function PropertyNewPage() {
         <Card>
           <CardContent sx={{ p: 3 }}>
             <PropertyForm />
+            <PropertyMediaStaging files={stagedMedia} onChange={setStagedMedia} />
             <Box display="flex" justifyContent="flex-end" gap={2} mt={3}>
               <Button onClick={() => navigate(ROUTES.PROPERTIES)} disabled={isPending}>
                 Cancelar

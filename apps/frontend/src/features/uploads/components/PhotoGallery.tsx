@@ -17,6 +17,12 @@ const PHOTO_TYPES = [
 ];
 
 const API_BASE = '';
+const VIDEO_EXTENSIONS = ['.mp4', '.mov', '.webm', '.m4v'];
+
+function isVideoUrl(url: string) {
+  const clean = url.split('?')[0].toLowerCase();
+  return VIDEO_EXTENSIONS.some((ext) => clean.endsWith(ext));
+}
 
 interface Props {
   propertyId: number;
@@ -40,8 +46,9 @@ export default function PhotoGallery({ propertyId }: Props) {
     <Box>
       <FileUploadZone
         onUpload={handleUpload}
-        accept="image/*"
-        label="Subir foto"
+        accept="image/*,video/mp4,video/quicktime,video/webm"
+        label="Subir foto o video"
+        hint="Fotos y videos — máx. 100 MB"
         fileTypeOptions={PHOTO_TYPES}
       />
 
@@ -58,15 +65,25 @@ export default function PhotoGallery({ propertyId }: Props) {
         <ImageList cols={3} rowHeight={160} sx={{ mt: 1 }}>
           {photos.map((photo) => {
             const src = `${API_BASE}${photo.url}`;
+            const isVideo = isVideoUrl(photo.url);
             return (
               <ImageListItem key={photo.id}>
-                <img
-                  src={src}
-                  alt={photo.caption ?? photo.type}
-                  loading="lazy"
-                  style={{ height: 160, objectFit: 'cover', cursor: 'pointer' }}
-                  onClick={() => setLightbox(src)}
-                />
+                {isVideo ? (
+                  <video
+                    src={src}
+                    muted
+                    style={{ height: 160, width: '100%', objectFit: 'cover', cursor: 'pointer' }}
+                    onClick={() => setLightbox(src)}
+                  />
+                ) : (
+                  <img
+                    src={src}
+                    alt={photo.caption ?? photo.type}
+                    loading="lazy"
+                    style={{ height: 160, objectFit: 'cover', cursor: 'pointer' }}
+                    onClick={() => setLightbox(src)}
+                  />
+                )}
                 <ImageListItemBar
                   title={
                     <Chip
@@ -104,11 +121,20 @@ export default function PhotoGallery({ propertyId }: Props) {
       <Dialog open={!!lightbox} onClose={() => setLightbox(null)} maxWidth="lg">
         <DialogContent sx={{ p: 0, bgcolor: 'black' }}>
           {lightbox && (
-            <img
-              src={lightbox}
-              alt="Foto ampliada"
-              style={{ maxWidth: '90vw', maxHeight: '85vh', display: 'block' }}
-            />
+            isVideoUrl(lightbox) ? (
+              <video
+                src={lightbox}
+                controls
+                autoPlay
+                style={{ maxWidth: '90vw', maxHeight: '85vh', display: 'block' }}
+              />
+            ) : (
+              <img
+                src={lightbox}
+                alt="Foto ampliada"
+                style={{ maxWidth: '90vw', maxHeight: '85vh', display: 'block' }}
+              />
+            )
           )}
         </DialogContent>
       </Dialog>

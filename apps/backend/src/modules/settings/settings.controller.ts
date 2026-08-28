@@ -19,3 +19,16 @@ export async function updateSettings(req: AuthRequest, res: Response): Promise<v
     res.status(err.status || 500).json({ error: err.message, code: err.code });
   }
 }
+
+export async function uploadLogo(req: AuthRequest, res: Response): Promise<void> {
+  try {
+    if (!req.file) {
+      res.status(400).json({ error: 'No se recibió ningún archivo', code: 'VALIDATION_ERROR' });
+      return;
+    }
+    const settings = await service.setLogo(req.file);
+    res.json(settings);
+  } catch (err: any) {
+    res.status(err.status || 500).json({ error: err.message, code: err.code });
+  }
+}

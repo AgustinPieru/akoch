@@ -15,12 +15,21 @@ const STATUS_OPTIONS = [
   { value: 'PAID', label: 'Pagados' },
 ];
 
+const MONTH_OPTIONS = [
+  { value: 1, label: 'Enero' }, { value: 2, label: 'Febrero' }, { value: 3, label: 'Marzo' },
+  { value: 4, label: 'Abril' }, { value: 5, label: 'Mayo' }, { value: 6, label: 'Junio' },
+  { value: 7, label: 'Julio' }, { value: 8, label: 'Agosto' }, { value: 9, label: 'Septiembre' },
+  { value: 10, label: 'Octubre' }, { value: 11, label: 'Noviembre' }, { value: 12, label: 'Diciembre' },
+];
+
 const currentYear = new Date().getFullYear();
+const currentMonth = new Date().getMonth() + 1;
 const YEAR_OPTIONS = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i);
 
 export default function PaymentsListPage() {
   const [status, setStatus] = useState('PENDING');
   const [year, setYear] = useState<number | ''>(currentYear);
+  const [month, setMonth] = useState<number | ''>(currentMonth);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(0);
   const rowsPerPage = 20;
@@ -28,6 +37,7 @@ export default function PaymentsListPage() {
   const { data, isLoading, isError } = usePayments({
     ...(status && { status }),
     ...(year !== '' && { year }),
+    ...(month !== '' && { month }),
     ...(search.trim() && { search: search.trim() }),
     page: page + 1,
     limit: rowsPerPage,
@@ -57,6 +67,17 @@ export default function PaymentsListPage() {
           sx={{ minWidth: 150 }}
         >
           {STATUS_OPTIONS.map((o) => <MenuItem key={o.value} value={o.value}>{o.label}</MenuItem>)}
+        </TextField>
+        <TextField
+          select
+          size="small"
+          label="Mes"
+          value={month}
+          onChange={(e) => { setMonth(e.target.value === '' ? '' : Number(e.target.value)); setPage(0); }}
+          sx={{ minWidth: 140 }}
+        >
+          <MenuItem value="">Todos</MenuItem>
+          {MONTH_OPTIONS.map((m) => <MenuItem key={m.value} value={m.value}>{m.label}</MenuItem>)}
         </TextField>
         <TextField
           select

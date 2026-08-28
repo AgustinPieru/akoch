@@ -6,6 +6,7 @@ interface Props {
   onUpload: (file: File, meta: { name: string; fileType: string; notes?: string }) => Promise<void>;
   accept?: string;
   label?: string;
+  hint?: string;
   fileTypeOptions?: { value: string; label: string }[];
 }
 
@@ -13,6 +14,7 @@ export default function FileUploadZone({
   onUpload,
   accept = 'image/*,application/pdf,.doc,.docx',
   label = 'Subir archivo',
+  hint = 'PDF, Word, imágenes — máx. 10 MB',
   fileTypeOptions,
 }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -63,7 +65,7 @@ export default function FileUploadZone({
           Arrastrá un archivo o hacé clic para seleccionar
         </Typography>
         <Typography variant="caption" color="text.disabled">
-          PDF, Word, imágenes — máx. 10 MB
+          {hint}
         </Typography>
         <input
           ref={inputRef}

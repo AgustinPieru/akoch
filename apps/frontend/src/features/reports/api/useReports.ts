@@ -162,12 +162,11 @@ export function useAdjustmentsReport(year: number) {
 
 export interface SettlementRecord {
   id: number; periodYear: number; periodMonth: number;
-  status: string; rentCollected: number; commissionPct: number;
-  commissionAmount: number; expensesAmount: number; netAmount: number; currency: string;
-  property: {
-    id: number; street: string; number: string; city: string;
-    owners: { owner: { id: number; firstName?: string; lastName?: string; businessName?: string; type: string } }[];
-  };
+  status: string; totalRent: number; totalCommission: number;
+  totalExpenses: number; totalCharges: number; netAmount: number; currency: string;
+  properties: {
+    property: { id: number; street: string; number: string; city: string };
+  }[];
 }
 export interface SettlementsReport {
   year: number;

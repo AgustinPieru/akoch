@@ -5,11 +5,12 @@ import {
   Alert, Dialog, DialogTitle, DialogContent, DialogActions, TextField,
   Table, TableBody, TableCell, TableHead, TableRow,
 } from '@mui/material';
-import { ArrowBack, PlayArrow, Stop, EventNote, TrendingUp, CheckCircleOutline, Autorenew, Edit } from '@mui/icons-material';
-import { useContract, useActivateContract, useTerminateContract, useFinalizeContract } from '../api/useContracts';
+import { ArrowBack, PlayArrow, Stop, EventNote, TrendingUp, CheckCircleOutline, Autorenew, Edit, Email, PictureAsPdf } from '@mui/icons-material';
+import { useContract, useActivateContract, useTerminateContract, useFinalizeContract, downloadContractPdf } from '../api/useContracts';
 import AdjustContractDialog from '../components/AdjustContractDialog';
 import RenewContractDialog from '../components/RenewContractDialog';
 import EditContractDialog from '../components/EditContractDialog';
+import SendContractDialog from '../components/SendContractDialog';
 import { usePayments, useGeneratePayments } from '@/features/payments/api/usePayments';
 import PaymentsTable from '@/features/payments/components/PaymentsTable';
 import DocumentList from '@/features/uploads/components/DocumentList';
@@ -62,6 +63,7 @@ export default function ContractDetailPage() {
   const [adjustOpen, setAdjustOpen] = useState(false);
   const [finalizeOpen, setFinalizeOpen] = useState(false);
   const [renewOpen, setRenewOpen] = useState(false);
+  const [sendEmailOpen, setSendEmailOpen] = useState(false);
 
   const { data: paymentsData } = usePayments({ contractId: contractId, limit: 200 });
   const generatePayments = useGeneratePayments();
@@ -102,7 +104,7 @@ export default function ContractDetailPage() {
 
   return (
     <Box maxWidth={900} mx="auto">
-      <Box display="flex" alignItems="center" gap={2} mb={3}>
+      <Box display="flex" alignItems="center" gap={2} mb={3} flexWrap="wrap">
         <Button startIcon={<ArrowBack />} onClick={() => navigate(ROUTES.CONTRACTS)} size="small">
           Contratos
         </Button>
@@ -110,6 +112,12 @@ export default function ContractDetailPage() {
           {contract.property.street} {contract.property.number}, {contract.property.city}
         </Typography>
         <Chip label={st.label} color={st.color} />
+        <Button size="small" variant="outlined" startIcon={<PictureAsPdf />} onClick={() => downloadContractPdf(contract.id)}>
+          PDF
+        </Button>
+        <Button size="small" variant="outlined" startIcon={<Email />} onClick={() => setSendEmailOpen(true)}>
+          Enviar por email
+        </Button>
       </Box>
 
       {contract.status === 'DRAFT' && (
@@ -361,6 +369,10 @@ export default function ContractDetailPage() {
 
       {renewOpen && (
         <RenewContractDialog contract={contract} onClose={() => setRenewOpen(false)} />
+      )}
+
+      {sendEmailOpen && (
+        <SendContractDialog contract={contract} onClose={() => setSendEmailOpen(false)} />
       )}
 
       <Dialog open={finalizeOpen} onClose={() => setFinalizeOpen(false)} maxWidth="sm" fullWidth>

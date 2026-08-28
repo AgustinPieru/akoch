@@ -36,7 +36,7 @@ export default function TenantsListPage() {
 
   return (
     <Box>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3} flexWrap="wrap" gap={2}>
         <Typography variant="h5">Inquilinos</Typography>
         <Button variant="contained" startIcon={<Add />} onClick={() => navigate(ROUTES.TENANT_NEW)}>
           Nuevo inquilino
@@ -50,7 +50,7 @@ export default function TenantsListPage() {
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(0); }}
             size="small"
-            sx={{ width: 360 }}
+            sx={{ width: { xs: '100%', sm: 360 } }}
             InputProps={{
               startAdornment: <InputAdornment position="start"><Search fontSize="small" /></InputAdornment>,
             }}

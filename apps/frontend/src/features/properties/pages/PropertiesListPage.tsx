@@ -66,7 +66,7 @@ export default function PropertiesListPage() {
 
   return (
     <Box>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3} flexWrap="wrap" gap={2}>
         <Typography variant="h5">Propiedades</Typography>
         <Button
           variant="contained"
@@ -78,13 +78,13 @@ export default function PropertiesListPage() {
       </Box>
 
       <Card>
-        <Box sx={{ p: 2, borderBottom: '1px solid', borderColor: 'divider', display: 'flex', gap: 2 }}>
+        <Box sx={{ p: 2, borderBottom: '1px solid', borderColor: 'divider', display: 'flex', gap: 2, flexWrap: 'wrap' }}>
           <TextField
             placeholder="Buscar por calle o ciudad..."
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(0); }}
             size="small"
-            sx={{ width: 320 }}
+            sx={{ width: { xs: '100%', sm: 320 } }}
             InputProps={{
               startAdornment: <InputAdornment position="start"><Search fontSize="small" /></InputAdornment>,
             }}

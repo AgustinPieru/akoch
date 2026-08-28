@@ -2,7 +2,9 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box, Stepper, Step, StepLabel, Button, Paper, Typography, CircularProgress,
+  useMediaQuery,
 } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import { useForm, FormProvider } from 'react-hook-form';
 import Step1Property from '../components/wizard/Step1Property';
 import Step2Tenants from '../components/wizard/Step2Tenants';
@@ -33,6 +35,8 @@ interface FormValues {
 
 export default function ContractNewPage() {
   const navigate = useNavigate();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [activeStep, setActiveStep] = useState(0);
   const [propertyId, setPropertyId] = useState<number | null>(null);
   const [tenants, setTenants] = useState<SelectedTenant[]>([]);
@@ -136,7 +140,7 @@ export default function ContractNewPage() {
     <Box maxWidth={900} mx="auto">
       <Typography variant="h5" fontWeight={700} mb={3}>Nuevo contrato</Typography>
 
-      <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
+      <Stepper activeStep={activeStep} orientation={isMobile ? 'vertical' : 'horizontal'} sx={{ mb: 4 }}>
         {STEPS.map((label) => (
           <Step key={label}><StepLabel>{label}</StepLabel></Step>
         ))}

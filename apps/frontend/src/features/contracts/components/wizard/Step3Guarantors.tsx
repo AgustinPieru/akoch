@@ -112,7 +112,7 @@ export default function Step3Guarantors({ value, onChange }: Props) {
       )}
 
       <Paper variant="outlined" sx={{ p: 2 }}>
-        <Typography variant="subtitle2" gutterBottom>
+        <Typography variant="subtitle2" sx={{ mb: 2 }}>
           {editingIndex !== null ? 'Editar garante' : 'Nuevo garante'}
         </Typography>
         <Box display="flex" flexDirection="column" gap={2}>

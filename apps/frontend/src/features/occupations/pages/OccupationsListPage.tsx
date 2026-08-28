@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Box, Typography, Button, Card, CardContent, Table, TableHead, TableRow,
+  Box, Typography, Button, Card, CardContent, Table, TableContainer, TableHead, TableRow,
   TableCell, TableBody, Chip, IconButton, Tooltip, CircularProgress, Alert,
   TextField, MenuItem, InputAdornment,
 } from '@mui/material';
@@ -51,7 +51,7 @@ export default function OccupationsListPage() {
 
   return (
     <Box>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3} flexWrap="wrap" gap={2}>
         <Typography variant="h5" fontWeight={700}>Ocupaciones sin contrato</Typography>
         <Button variant="contained" startIcon={<AddIcon />} onClick={() => setCreateOpen(true)}>
           Nueva ocupación
@@ -60,11 +60,11 @@ export default function OccupationsListPage() {
 
       <Card sx={{ mb: 3 }}>
         <CardContent sx={{ pb: '12px !important' }}>
-          <Box display="flex" gap={2}>
+          <Box display="flex" gap={2} flexWrap="wrap">
             <TextField
               size="small" placeholder="Buscar por ocupante o dirección"
               value={search} onChange={(e) => setSearch(e.target.value)}
-              sx={{ flex: 1 }}
+              sx={{ flex: 1, minWidth: 220 }}
               InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment> }}
             />
             <TextField select size="small" label="Estado" value={status} onChange={(e) => setStatus(e.target.value)} sx={{ minWidth: 160 }}>
@@ -82,6 +82,7 @@ export default function OccupationsListPage() {
 
       {!isLoading && (
         <Card>
+          <TableContainer>
           <Table>
             <TableHead>
               <TableRow sx={{ '& th': { fontWeight: 600, bgcolor: 'grey.50' } }}>
@@ -156,6 +157,7 @@ export default function OccupationsListPage() {
               })}
             </TableBody>
           </Table>
+          </TableContainer>
         </Card>
       )}
 

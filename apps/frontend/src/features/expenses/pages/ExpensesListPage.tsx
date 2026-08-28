@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import {
-  Box, Typography, Button, Paper, Table, TableBody, TableCell, TableHead,
+  Box, Typography, Button, Paper, Table, TableBody, TableCell, TableContainer, TableHead,
   TableRow, TablePagination, Chip, IconButton, MenuItem, TextField,
   CircularProgress, Alert, Tooltip, InputAdornment,
 } from '@mui/material';
@@ -64,7 +64,7 @@ export default function ExpensesListPage() {
 
   return (
     <Box>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3} flexWrap="wrap" gap={2}>
         <Typography variant="h5" fontWeight={700}>Gastos</Typography>
         <Button variant="contained" startIcon={<Add />} onClick={() => { setEditing(null); setDialogOpen(true); }}>
           Registrar gasto
@@ -109,6 +109,7 @@ export default function ExpensesListPage() {
 
       {data && (
         <Paper>
+          <TableContainer>
           <Table size="small">
             <TableHead>
               <TableRow sx={{ '& th': { fontWeight: 600 } }}>
@@ -169,6 +170,7 @@ export default function ExpensesListPage() {
               )}
             </TableBody>
           </Table>
+          </TableContainer>
           <TablePagination
             component="div"
             count={data.total}

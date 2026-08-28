@@ -104,20 +104,32 @@ export async function getPaymentById(id: number) {
   return payment;
 }
 
-export async function generatePaymentsForContract(contractId: number) {
+// Genera solo los períodos "ciertos": desde el inicio del contrato (o desde el último período ya
+// generado) hasta antes de que aplique el próximo ajuste de índice, usando el monto vigente. Se llama
+// al activar el contrato y después de cada ajuste, para ir completando los períodos de a tramos a
+// medida que se conocen los montos — nunca se generan períodos futuros con un monto todavía incierto.
+export async function generateCertainPayments(contractId: number) {
   const contract = await prisma.contract.findUnique({
     where: { id: contractId },
-    select: { id: true, startDate: true, durationMonths: true, currentAmount: true, status: true },
+    select: { id: true, startDate: true, durationMonths: true, currentAmount: true, nextAdjustmentDate: true, status: true },
   });
   if (!contract) throw { status: 404, message: 'Contrato no encontrado', code: 'NOT_FOUND' };
   if (contract.status === 'DRAFT') throw { status: 409, message: 'El contrato debe estar activo', code: 'INVALID_STATUS' };
 
-  const periods: { contractId: number; periodYear: number; periodMonth: number; expectedAmount: number; dueDate: Date; status: PaymentStatus }[] = [];
   const startUtc = contract.startDate;
   const startYear = startUtc.getUTCFullYear();
   const startMonth = startUtc.getUTCMonth();
 
-  for (let i = 0; i < contract.durationMonths; i++) {
+  let certainMonths = contract.durationMonths;
+  if (contract.nextAdjustmentDate) {
+    const adjY = contract.nextAdjustmentDate.getUTCFullYear();
+    const adjM = contract.nextAdjustmentDate.getUTCMonth();
+    const diffMonths = (adjY - startYear) * 12 + (adjM - startMonth);
+    certainMonths = Math.min(contract.durationMonths, Math.max(0, diffMonths));
+  }
+
+  const periods: { contractId: number; periodYear: number; periodMonth: number; expectedAmount: number; dueDate: Date; status: PaymentStatus }[] = [];
+  for (let i = 0; i < certainMonths; i++) {
     const totalMonths = startMonth + i;
     const periodYear = startYear + Math.floor(totalMonths / 12);
     const periodMonth = (totalMonths % 12) + 1;
@@ -133,8 +145,9 @@ export async function generatePaymentsForContract(contractId: number) {
     });
   }
 
-  // Insertar ignorando duplicados (ya existen si se regenera)
-  await prisma.payment.createMany({ data: periods, skipDuplicates: true });
+  if (periods.length > 0) {
+    await prisma.payment.createMany({ data: periods, skipDuplicates: true });
+  }
 
   return prisma.payment.findMany({
     where: { contractId },

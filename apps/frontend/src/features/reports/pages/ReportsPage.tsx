@@ -685,12 +685,18 @@ function SettlementsReportTab() {
                       <TableRow key={s.id}>
                         <TableCell>{MONTHS_SHORT[s.periodMonth - 1]} {s.periodYear}</TableCell>
                         <TableCell>
-                          <Typography variant="body2">{s.property.street} {s.property.number}</Typography>
-                          <Typography variant="caption" color="text.secondary">{s.property.city}</Typography>
+                          {s.properties.length === 1 ? (
+                            <>
+                              <Typography variant="body2">{s.properties[0].property.street} {s.properties[0].property.number}</Typography>
+                              <Typography variant="caption" color="text.secondary">{s.properties[0].property.city}</Typography>
+                            </>
+                          ) : (
+                            <Typography variant="body2">{s.properties.length} propiedades</Typography>
+                          )}
                         </TableCell>
-                        <TableCell align="right">{formatMoney(s.rentCollected, s.currency)}</TableCell>
-                        <TableCell align="right">{formatMoney(s.commissionAmount, s.currency)}</TableCell>
-                        <TableCell align="right">{formatMoney(s.expensesAmount, s.currency)}</TableCell>
+                        <TableCell align="right">{formatMoney(s.totalRent, s.currency)}</TableCell>
+                        <TableCell align="right">{formatMoney(s.totalCommission, s.currency)}</TableCell>
+                        <TableCell align="right">{formatMoney(s.totalExpenses, s.currency)}</TableCell>
                         <TableCell align="right" sx={{ fontWeight: 700, color: 'success.main' }}>{formatMoney(s.netAmount, s.currency)}</TableCell>
                         <TableCell>
                           <Chip label={s.status === 'PAID' ? 'Pagada' : s.status === 'SENT' ? 'Enviada' : 'Borrador'}

@@ -90,11 +90,12 @@ export async function getStats(req: AuthRequest, res: Response): Promise<void> {
         orderBy: { endDate: 'asc' },
         take: 10,
       }),
-      prisma.settlement.findMany({
+      prisma.ownerSettlement.findMany({
         where: { status: 'DRAFT' },
         select: {
           id: true, periodYear: true, periodMonth: true, netAmount: true, currency: true,
-          property: { select: { street: true, number: true, city: true } },
+          owner: { select: { firstName: true, lastName: true, businessName: true, type: true } },
+          properties: { select: { property: { select: { street: true, number: true, city: true } } } },
         },
         orderBy: [{ periodYear: 'desc' }, { periodMonth: 'desc' }],
         take: 10,
@@ -263,11 +264,12 @@ export async function getAlerts(_req: Request, res: Response): Promise<void> {
         take: 20,
       }),
       // 🟡 Liquidaciones DRAFT del mes actual sin enviar
-      prisma.settlement.findMany({
+      prisma.ownerSettlement.findMany({
         where: { status: 'DRAFT' },
         select: {
           id: true, periodYear: true, periodMonth: true, netAmount: true, currency: true,
-          property: { select: { street: true, number: true, city: true } },
+          owner: { select: { firstName: true, lastName: true, businessName: true, type: true } },
+          properties: { select: { property: { select: { street: true, number: true, city: true } } } },
         },
         orderBy: [{ periodYear: 'desc' }, { periodMonth: 'desc' }],
         take: 20,
@@ -413,13 +415,16 @@ export async function getAlerts(_req: Request, res: Response): Promise<void> {
 
     // 🟡 Liquidaciones DRAFT sin enviar
     for (const s of draftSettlementsThisMonth) {
-      const prop = `${s.property.street} ${s.property.number}, ${s.property.city}`;
+      const propCount = s.properties.length;
+      const propLabel = propCount === 1
+        ? `${s.properties[0].property.street} ${s.properties[0].property.number}, ${s.properties[0].property.city}`
+        : `${propCount} propiedades`;
       alerts.push({
         id: `settlement_${s.id}`,
         severity: 'warning',
         type: 'draft_settlement',
         title: 'Liquidación sin enviar',
-        message: `${prop} — ${s.periodMonth}/${s.periodYear}`,
+        message: `${tenantName(s.owner)} — ${propLabel} — ${s.periodMonth}/${s.periodYear}`,
         entityId: s.id,
         entityType: 'settlement',
       });

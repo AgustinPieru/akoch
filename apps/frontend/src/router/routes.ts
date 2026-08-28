@@ -17,6 +17,7 @@ export const ROUTES = {
   EXPENSES: '/gastos',
   SETTLEMENTS: '/liquidaciones',
   SETTLEMENT_DETAIL: (id: number | string) => `/liquidaciones/${id}`,
+  SETTLEMENTS_PERIOD: (year: number | string, month: number | string) => `/liquidaciones/periodo/${year}/${month}`,
   RECEIPTS: '/recibos',
   REPORTS: '/reportes',
   SALES: '/ventas',

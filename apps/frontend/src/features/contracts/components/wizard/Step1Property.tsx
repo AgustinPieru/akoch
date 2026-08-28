@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import {
   Box, Typography, TextField, InputAdornment, CircularProgress,
-  Card, CardActionArea, CardContent, Chip, Alert, Grid,
+  Card, CardActionArea, CardContent, Chip, Alert, Grid, Button,
 } from '@mui/material';
-import { Search, Home } from '@mui/icons-material';
+import { Search, Home, Add } from '@mui/icons-material';
 import { useProperties } from '@/features/properties/api/useProperties';
+import InlinePropertyCreateForm from '@/features/properties/components/InlinePropertyCreateForm';
 
 const TYPE_LABELS: Record<string, string> = {
   CASA: 'Casa', DEPARTAMENTO: 'Departamento', LOCAL_COMERCIAL: 'Local comercial',
@@ -19,7 +20,23 @@ interface Props {
 
 export default function Step1Property({ value, onChange }: Props) {
   const [search, setSearch] = useState('');
+  const [creating, setCreating] = useState(false);
   const { data, isLoading } = useProperties({ search, status: 'AVAILABLE', limit: 50 });
+
+  if (creating) {
+    return (
+      <Box>
+        <Typography variant="h6" gutterBottom>Nueva propiedad</Typography>
+        <Typography variant="body2" color="text.secondary" mb={3}>
+          Se seleccionará automáticamente para este contrato al guardarla.
+        </Typography>
+        <InlinePropertyCreateForm
+          onCreated={(propertyId) => { onChange(propertyId); setSearch(''); setCreating(false); }}
+          onCancel={() => setCreating(false)}
+        />
+      </Box>
+    );
+  }
 
   return (
     <Box>
@@ -28,20 +45,30 @@ export default function Step1Property({ value, onChange }: Props) {
         Solo se muestran propiedades disponibles.
       </Typography>
 
-      <TextField
-        placeholder="Buscar por calle o ciudad..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        size="small"
-        fullWidth
-        sx={{ mb: 3 }}
-        InputProps={{ startAdornment: <InputAdornment position="start"><Search fontSize="small" /></InputAdornment> }}
-      />
+      <Box display="flex" gap={2} mb={3}>
+        <TextField
+          placeholder="Buscar por calle o ciudad..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          size="small"
+          fullWidth
+          InputProps={{ startAdornment: <InputAdornment position="start"><Search fontSize="small" /></InputAdornment> }}
+        />
+        <Button
+          size="small"
+          variant="outlined"
+          startIcon={<Add />}
+          onClick={() => setCreating(true)}
+          sx={{ whiteSpace: 'nowrap', flexShrink: 0 }}
+        >
+          Crear propiedad
+        </Button>
+      </Box>
 
       {isLoading && <Box display="flex" justifyContent="center" py={4}><CircularProgress /></Box>}
 
       {data?.data.length === 0 && !isLoading && (
-        <Alert severity="info">No hay propiedades disponibles. Cargá una propiedad primero.</Alert>
+        <Alert severity="info">No hay propiedades disponibles. Cargá una propiedad nueva con el botón de arriba.</Alert>
       )}
 
       <Grid container spacing={2}>

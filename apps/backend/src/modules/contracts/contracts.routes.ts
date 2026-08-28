@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { body } from 'express-validator';
 import { authenticate } from '../../middleware/auth.middleware';
-import { activateContract, adjustContract, createContract, getContract, getContracts, terminateContract, finalizeContract, renewContract, updateContract, setCommissionInstallmentStatus } from './contracts.controller';
+import { activateContract, adjustContract, createContract, getContract, getContracts, terminateContract, finalizeContract, renewContract, updateContract, setCommissionInstallmentStatus, downloadContractPdf, sendContractEmail } from './contracts.controller';
 
 const router = Router();
 
@@ -24,6 +24,15 @@ router.post(
 
 router.patch('/:id', updateContract);
 router.post('/:id/activate', activateContract);
+router.get('/:id/pdf', downloadContractPdf);
+router.post(
+  '/:id/send-email',
+  [
+    body('emails').isArray({ min: 1 }).withMessage('Se requiere al menos un email'),
+    body('emails.*').isEmail().withMessage('Email inválido'),
+  ],
+  sendContractEmail,
+);
 router.patch(
   '/:id/commission-installments/:installmentId',
   [body('status').isIn(['PENDING', 'PAID']).withMessage('Estado inválido')],

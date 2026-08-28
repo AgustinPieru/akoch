@@ -39,7 +39,7 @@ export interface Contract {
   createdAt: string;
   property: {
     id: number; street: string; number: string; city: string; status: string;
-    owners: { owner: { id: number; firstName?: string; lastName?: string; businessName?: string; type: string } }[];
+    owners: { owner: { id: number; firstName?: string; lastName?: string; businessName?: string; type: string; email?: string } }[];
   };
   tenants: ContractTenantLink[];
   adjustments: { id: number; appliedAt: string; previousAmount: number; newAmount: number; percentage: number; indexType: string }[];
@@ -152,6 +152,31 @@ export function useRenewContract() {
       qc.invalidateQueries({ queryKey: ['dashboard-alerts'] });
     },
   });
+}
+
+export interface SendContractEmailResult {
+  sent: boolean;
+  emails: string[];
+  propertyLabel: string;
+  messageId?: string;
+  skipped: { filename: string; sizeBytes: number }[];
+}
+
+export function useSendContractEmail() {
+  return useMutation({
+    mutationFn: ({ id, emails }: { id: number; emails: string[] }) =>
+      api.post<SendContractEmailResult>(`/contracts/${id}/send-email`, { emails }).then((r) => r.data),
+  });
+}
+
+export async function downloadContractPdf(id: number) {
+  const response = await api.get(`/contracts/${id}/pdf`, { responseType: 'blob' });
+  const url = URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `contrato-${id}-resumen.pdf`;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 export function useFinalizeContract() {

@@ -1,14 +1,17 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
-  Box, Typography, Button, Chip, Paper, Grid, Divider, CircularProgress,
-  Alert, Table, TableBody, TableCell, TableRow,
+  Box, Typography, Button, Chip, Paper, Grid, CircularProgress, Alert,
 } from '@mui/material';
 import { ArrowBack, Send, CheckCircle, PictureAsPdf, Refresh } from '@mui/icons-material';
 import api from '@/lib/axios';
 import { fmtDate } from '@/lib/dateUtils';
 import { useSettlement, useMarkSettlementPaid, useGenerateSettlement } from '../api/useSettlements';
 import SendSettlementDialog from '../components/SendSettlementDialog';
+import SettlementChargesSection from '../components/SettlementChargesSection';
+import SettlementSummaryTable from '../components/SettlementSummaryTable';
+import SettlementPropertiesTable from '../components/SettlementPropertiesTable';
+import SettlementStatusGuidance from '../components/SettlementStatusGuidance';
 import { ROUTES } from '@/router/routes';
 
 const MONTHS = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
@@ -18,26 +21,6 @@ const STATUS_CONFIG: Record<string, { label: string; color: 'default' | 'info' |
   SENT: { label: 'Enviada', color: 'info' },
   PAID: { label: 'Pagada', color: 'success' },
 };
-
-function SummaryRow({ label, value, highlight, negative }: { label: string; value: string; highlight?: boolean; negative?: boolean }) {
-  return (
-    <TableRow>
-      <TableCell sx={{ fontWeight: highlight ? 700 : 400, borderBottom: highlight ? '2px solid' : undefined }}>
-        {label}
-      </TableCell>
-      <TableCell
-        align="right"
-        sx={{
-          fontWeight: highlight ? 700 : 400,
-          color: negative ? 'error.main' : highlight ? 'success.main' : 'text.primary',
-          borderBottom: highlight ? '2px solid' : undefined,
-        }}
-      >
-        {value}
-      </TableCell>
-    </TableRow>
-  );
-}
 
 export default function SettlementDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -63,7 +46,7 @@ export default function SettlementDetailPage() {
   const handleRegenerate = () => {
     if (!settlement) return;
     regenerate.mutate({
-      contractId: settlement.contractId,
+      ownerId: settlement.ownerId,
       year: settlement.periodYear,
       month: settlement.periodMonth,
       notes: settlement.notes,
@@ -74,47 +57,44 @@ export default function SettlementDetailPage() {
   if (isError || !settlement) return <Alert severity="error">No se pudo cargar la liquidación.</Alert>;
 
   const st = STATUS_CONFIG[settlement.status];
-  const currency = settlement.currency;
-
-  const formatMoney = (n: number) =>
-    currency === 'USD'
-      ? `USD ${Number(n).toLocaleString('es-AR', { minimumFractionDigits: 2 })}`
-      : `$${Number(n).toLocaleString('es-AR', { minimumFractionDigits: 2 })}`;
-
   const formatDate = fmtDate;
 
-  const primaryOwner = settlement.property.owners[0]?.owner;
-  const ownerName = primaryOwner
-    ? primaryOwner.type === 'PERSONA_JURIDICA'
-      ? primaryOwner.businessName
-      : [primaryOwner.firstName, primaryOwner.lastName].filter(Boolean).join(' ')
-    : '—';
+  const owner = settlement.owner;
+  const ownerName = owner.type === 'PERSONA_JURIDICA'
+    ? owner.businessName
+    : [owner.firstName, owner.lastName].filter(Boolean).join(' ');
 
   return (
-    <Box maxWidth={800} mx="auto">
-      <Box display="flex" alignItems="center" gap={2} mb={3}>
+    <Box maxWidth={900} mx="auto">
+      <Box display="flex" alignItems="center" gap={2} mb={3} flexWrap="wrap">
         <Button startIcon={<ArrowBack />} onClick={() => navigate(ROUTES.SETTLEMENTS)} size="small">
           Liquidaciones
         </Button>
         <Typography variant="h5" fontWeight={700} flex={1}>
-          Liquidación — {MONTHS[settlement.periodMonth - 1]} {settlement.periodYear}
+          {ownerName} — {MONTHS[settlement.periodMonth - 1]} {settlement.periodYear}
         </Typography>
         <Chip label={st.label} color={st.color} />
       </Box>
 
+      <SettlementStatusGuidance settlement={settlement} />
+
       <Grid container spacing={3}>
+        <Grid item xs={12}>
+          <Paper sx={{ p: 2 }}>
+            <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+              Propiedades incluidas ({settlement.properties.length})
+            </Typography>
+            <SettlementPropertiesTable settlement={settlement} />
+          </Paper>
+        </Grid>
+
         <Grid item xs={12} md={6}>
           <Paper sx={{ p: 2 }}>
-            <Typography variant="subtitle2" color="text.secondary" gutterBottom>Propiedad</Typography>
-            <Typography variant="body1" fontWeight={600}>
-              {settlement.property.street} {settlement.property.number}, {settlement.property.city}
-            </Typography>
-            <Divider sx={{ my: 1.5 }} />
             <Typography variant="subtitle2" color="text.secondary" gutterBottom>Propietario</Typography>
-            <Typography variant="body2" fontWeight={500}>{ownerName}</Typography>
-            {primaryOwner?.cbu && (
+            <Typography variant="body1" fontWeight={600}>{ownerName}</Typography>
+            {owner.cbu && (
               <Typography variant="caption" color="text.secondary" display="block">
-                CBU: {primaryOwner.cbu} {primaryOwner.bankName ? `— ${primaryOwner.bankName}` : ''}
+                CBU: {owner.cbu} {owner.bankName ? `— ${owner.bankName}` : ''}
               </Typography>
             )}
           </Paper>
@@ -123,28 +103,13 @@ export default function SettlementDetailPage() {
         <Grid item xs={12} md={6}>
           <Paper sx={{ p: 2 }}>
             <Typography variant="subtitle2" color="text.secondary" gutterBottom>Resumen financiero</Typography>
-            <Table size="small">
-              <TableBody>
-                <SummaryRow label="Alquiler cobrado" value={formatMoney(settlement.rentCollected)} />
-                <SummaryRow
-                  label={`Comisión administración (${settlement.commissionPct}%)`}
-                  value={`−${formatMoney(settlement.commissionAmount)}`}
-                  negative
-                />
-                {settlement.expensesAmount > 0 && (
-                  <SummaryRow
-                    label="Gastos descontados"
-                    value={`−${formatMoney(settlement.expensesAmount)}`}
-                    negative
-                  />
-                )}
-                <SummaryRow
-                  label="Neto a transferir"
-                  value={formatMoney(settlement.netAmount)}
-                  highlight
-                />
-              </TableBody>
-            </Table>
+            <SettlementSummaryTable settlement={settlement} />
+          </Paper>
+        </Grid>
+
+        <Grid item xs={12}>
+          <Paper sx={{ p: 2 }}>
+            <SettlementChargesSection settlement={settlement} />
           </Paper>
         </Grid>
 
@@ -172,7 +137,7 @@ export default function SettlementDetailPage() {
         )}
       </Grid>
 
-      <Box display="flex" gap={2} justifyContent="flex-end" mt={3}>
+      <Box display="flex" gap={2} justifyContent="flex-end" mt={3} flexWrap="wrap">
         <Button
           variant="outlined"
           color="error"
@@ -217,8 +182,8 @@ export default function SettlementDetailPage() {
       {sendDialogOpen && (
         <SendSettlementDialog
           settlementId={settlementId}
-          defaultPhone={primaryOwner?.phone ?? undefined}
-          defaultEmail={primaryOwner?.email ?? undefined}
+          defaultPhone={owner.phone ?? undefined}
+          defaultEmail={owner.email ?? undefined}
           onClose={() => setSendDialogOpen(false)}
         />
       )}

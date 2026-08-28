@@ -24,6 +24,7 @@ const PaymentsListPage = lazy(() => import('@/features/payments/pages/PaymentsLi
 const ExpensesListPage = lazy(() => import('@/features/expenses/pages/ExpensesListPage'));
 const SettlementsListPage = lazy(() => import('@/features/settlements/pages/SettlementsListPage'));
 const SettlementDetailPage = lazy(() => import('@/features/settlements/pages/SettlementDetailPage'));
+const SettlementsPeriodReviewPage = lazy(() => import('@/features/settlements/pages/SettlementsPeriodReviewPage'));
 const SalesKanbanPage = lazy(() => import('@/features/sales/pages/SalesKanbanPage'));
 const ReceiptsPage = lazy(() => import('@/features/receipts/pages/ReceiptsPage'));
 const ReportsPage = lazy(() => import('@/features/reports/pages/ReportsPage'));
@@ -71,6 +72,7 @@ export default function AppRouter() {
           <Route path={ROUTES.PAYMENTS} element={<PaymentsListPage />} />
           <Route path={ROUTES.EXPENSES} element={<ExpensesListPage />} />
           <Route path={ROUTES.SETTLEMENTS} element={<SettlementsListPage />} />
+          <Route path="/liquidaciones/periodo/:year/:month" element={<SettlementsPeriodReviewPage />} />
           <Route path="/liquidaciones/:id" element={<SettlementDetailPage />} />
           <Route path={ROUTES.RECEIPTS} element={<ReceiptsPage />} />
           <Route path={ROUTES.REPORTS} element={<ReportsPage />} />
