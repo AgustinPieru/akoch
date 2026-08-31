@@ -35,5 +35,10 @@ apps/backend/prisma/dev.db-journal
 # Uploads (local dev)
 apps/backend/uploads/
 
+# WhatsApp session (perfil de Chromium con datos vivos — no debe vivir en git,
+# se corrompe con cualquier checkout/pull mientras el server está corriendo.
+# En producción persistir vía volumen montado en /app/.whatsapp-session)
+apps/backend/.whatsapp-session/
+
 # TypeScript
 *.tsbuildinfo
