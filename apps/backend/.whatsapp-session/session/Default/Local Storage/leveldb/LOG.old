@@ -1,3 +1,6 @@
-2026/08/28-10:00:52.734 129ef3 Reusing MANIFEST /Users/agu/Documents/Proyectos/Akoch-inmobiliaria/apps/backend/.whatsapp-session/session/Default/Local Storage/leveldb/MANIFEST-000001
-2026/08/28-10:00:52.751 129ef3 Recovering log #4
-2026/08/28-10:00:52.752 129ef3 Reusing old log /Users/agu/Documents/Proyectos/Akoch-inmobiliaria/apps/backend/.whatsapp-session/session/Default/Local Storage/leveldb/000004.log 
+2026/08/28-14:52:37.624 14110f Reusing MANIFEST /Users/agu/Documents/Proyectos/Akoch-inmobiliaria/apps/backend/.whatsapp-session/session/Default/Local Storage/leveldb/MANIFEST-000001
+2026/08/28-14:52:37.637 14110f Recovering log #4
+2026/08/28-14:52:37.638 14110f Reusing old log /Users/agu/Documents/Proyectos/Akoch-inmobiliaria/apps/backend/.whatsapp-session/session/Default/Local Storage/leveldb/000004.log 
+2026/08/29-07:52:16.000 141110 Level-0 table #8: started
+2026/08/29-07:52:16.006 141110 Level-0 table #8: 17678 bytes OK
+2026/08/29-07:52:16.009 141110 Delete type=0 #4
