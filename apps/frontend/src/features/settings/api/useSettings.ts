@@ -4,6 +4,9 @@ import api from '@/lib/axios';
 export interface Settings {
   id: number;
   autoAdjustEnabled: boolean;
+  lateNotificationsEnabled: boolean;
+  expiryNotificationsEnabled: boolean;
+  monthlyNotificationsEnabled: boolean;
   agencyName?: string;
   agencyCuit?: string;
   agencyAddress?: string;
@@ -23,7 +26,7 @@ export function useSettings() {
 export function useUpdateSettings() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: Partial<Pick<Settings, 'autoAdjustEnabled' | 'agencyName' | 'agencyCuit' | 'agencyAddress' | 'agencyPhone' | 'agencyLicense'>>) =>
+    mutationFn: (data: Partial<Pick<Settings, 'autoAdjustEnabled' | 'lateNotificationsEnabled' | 'expiryNotificationsEnabled' | 'monthlyNotificationsEnabled' | 'agencyName' | 'agencyCuit' | 'agencyAddress' | 'agencyPhone' | 'agencyLicense'>>) =>
       api.patch('/settings', data).then((r) => r.data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['settings'] }),
   });

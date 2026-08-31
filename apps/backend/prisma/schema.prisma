@@ -684,15 +684,18 @@ model InformalOccupation {
 // ──────────────────────────────────────────────
 
 model Setting {
-  id                Int      @id @default(1)
-  autoAdjustEnabled Boolean  @default(true) @map("auto_adjust_enabled")
-  agencyName        String?  @map("agency_name")
-  agencyCuit        String?  @map("agency_cuit")
-  agencyAddress     String?  @map("agency_address")
-  agencyPhone       String?  @map("agency_phone")
-  agencyLicense     String?  @map("agency_license")
-  logoUrl           String?  @map("logo_url")
-  updatedAt         DateTime @updatedAt @map("updated_at")
+  id                          Int      @id @default(1)
+  autoAdjustEnabled           Boolean  @default(true) @map("auto_adjust_enabled")
+  lateNotificationsEnabled    Boolean  @default(true) @map("late_notifications_enabled")
+  expiryNotificationsEnabled  Boolean  @default(true) @map("expiry_notifications_enabled")
+  monthlyNotificationsEnabled Boolean  @default(true) @map("monthly_notifications_enabled")
+  agencyName                  String?  @map("agency_name")
+  agencyCuit                  String?  @map("agency_cuit")
+  agencyAddress               String?  @map("agency_address")
+  agencyPhone                 String?  @map("agency_phone")
+  agencyLicense               String?  @map("agency_license")
+  logoUrl                     String?  @map("logo_url")
+  updatedAt                   DateTime @updatedAt @map("updated_at")
 
   @@map("settings")
 }

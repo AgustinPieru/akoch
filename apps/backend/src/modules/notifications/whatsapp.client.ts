@@ -3,7 +3,8 @@ import qrcode from 'qrcode';
 import fs from 'fs';
 import path from 'path';
 
-const SESSION_PATH = path.join(process.cwd(), '.whatsapp-session', 'session');
+const SESSION_ROOT = path.join(process.cwd(), '.whatsapp-session');
+const SESSION_PATH = path.join(SESSION_ROOT, 'session');
 
 function clearSessionLocks() {
   for (const lock of ['SingletonLock', 'SingletonCookie', 'SingletonSocket']) {
@@ -54,17 +55,46 @@ export function getClient() {
   return client;
 }
 
+// El navegador puede quedar colgado si la sesión está corrupta; destroy() no puede
+// bloquear indefinidamente un reset o disconnect manual.
+async function destroyClientSafe(timeoutMs = 5000) {
+  if (!client) return;
+  const current = client;
+  client = null;
+  await Promise.race([
+    current.destroy().catch(() => {}),
+    new Promise((resolve) => setTimeout(resolve, timeoutMs)),
+  ]);
+}
+
 export async function disconnectWhatsApp() {
-  if (client) {
-    try { await client.destroy(); } catch {}
-    client = null;
-  }
+  await destroyClientSafe();
   status = 'disconnected';
   qrDataUrl = null;
   loadingPercent = 0;
   loadingMessage = '';
   broadcastStatus();
   console.log('[whatsapp] Cliente desconectado manualmente');
+}
+
+// Borra la sesión persistida en disco y arranca de cero para forzar un QR nuevo.
+// Útil cuando la conexión queda trabada (sesión corrupta, Chromium colgado, etc.).
+export async function resetWhatsAppSession() {
+  await destroyClientSafe();
+  status = 'disconnected';
+  qrDataUrl = null;
+  loadingPercent = 0;
+  loadingMessage = '';
+  broadcastStatus();
+
+  try {
+    fs.rmSync(SESSION_ROOT, { recursive: true, force: true });
+    console.log('[whatsapp] Sesión eliminada de disco');
+  } catch (err: any) {
+    console.error('[whatsapp] Error al eliminar sesión de disco:', err?.message || err);
+  }
+
+  initWhatsApp();
 }
 
 export function initWhatsApp() {

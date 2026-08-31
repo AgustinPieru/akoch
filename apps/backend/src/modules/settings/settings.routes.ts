@@ -13,6 +13,9 @@ router.patch(
   '/',
   [
     body('autoAdjustEnabled').optional().isBoolean(),
+    body('lateNotificationsEnabled').optional().isBoolean(),
+    body('expiryNotificationsEnabled').optional().isBoolean(),
+    body('monthlyNotificationsEnabled').optional().isBoolean(),
     body('agencyName').optional().isString(),
     body('agencyCuit').optional().isString(),
     body('agencyAddress').optional().isString(),

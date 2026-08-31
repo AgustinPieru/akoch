@@ -3,8 +3,8 @@ import {
   Box, Typography, Paper, Button, Chip, Alert, CircularProgress,
   Divider, LinearProgress,
 } from '@mui/material';
-import { WhatsApp, Refresh } from '@mui/icons-material';
-import { useWhatsAppStatus, useWhatsAppQr, useInitWhatsApp, useDisconnectWhatsApp } from '../api/useNotifications';
+import { WhatsApp, Refresh, DeleteForever } from '@mui/icons-material';
+import { useWhatsAppStatus, useWhatsAppQr, useInitWhatsApp, useDisconnectWhatsApp, useResetWhatsApp } from '../api/useNotifications';
 
 const STATUS_CONFIG = {
   disconnected: { label: 'Desconectado', color: 'error' as const },
@@ -19,6 +19,7 @@ export default function WhatsAppSetupPage() {
   const { refetch: fetchQr, isFetching: fetchingQr } = useWhatsAppQr();
   const initWA = useInitWhatsApp();
   const disconnectWA = useDisconnectWhatsApp();
+  const resetWA = useResetWhatsApp();
   const [qrUrl, setQrUrl] = useState<string | null>(null);
 
   const status = statusData?.status ?? 'disconnected';
@@ -36,6 +37,17 @@ export default function WhatsAppSetupPage() {
   }, [status, statusData?.hasQr]);
 
   const handleInit = () => initWA.mutate();
+
+  const handleReset = () => {
+    if (
+      window.confirm(
+        'Esto borra la sesión guardada de WhatsApp y va a requerir escanear un QR nuevo. ¿Continuar?',
+      )
+    ) {
+      setQrUrl(null);
+      resetWA.mutate();
+    }
+  };
 
   return (
     <Box maxWidth={600} mx="auto">
@@ -172,6 +184,25 @@ export default function WhatsAppSetupPage() {
             </Button>
           </Box>
         )}
+
+        <Divider sx={{ my: 2 }} />
+
+        <Box>
+          <Typography variant="body2" color="text.secondary" mb={1}>
+            Si la conexión queda trabada o el QR no se genera después de reintentar,
+            borrá la sesión guardada y empezá de cero.
+          </Typography>
+          <Button
+            variant="text"
+            color="error"
+            size="small"
+            startIcon={resetWA.isPending ? <CircularProgress size={16} color="inherit" /> : <DeleteForever />}
+            disabled={resetWA.isPending}
+            onClick={handleReset}
+          >
+            Borrar sesión y generar nuevo QR
+          </Button>
+        </Box>
       </Paper>
 
       <Paper sx={{ p: 3 }}>

@@ -139,6 +139,62 @@ export default function SettingsPage() {
               <Alert severity="error" sx={{ mt: 2 }}>No se pudo guardar el cambio.</Alert>
             )}
           </Paper>
+
+          <Paper sx={{ p: 3, mt: 3 }}>
+            <Typography variant="subtitle1" fontWeight={600} gutterBottom>Notificaciones automáticas por WhatsApp</Typography>
+            <Typography variant="body2" color="text.secondary" mb={2}>
+              Estas alertas se envían solas todos los días. Podés pausar cada una sin afectar las demás.
+            </Typography>
+
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={data.lateNotificationsEnabled}
+                  onChange={(e) => update.mutate({ lateNotificationsEnabled: e.target.checked })}
+                  disabled={update.isPending}
+                />
+              }
+              label="Recordatorio de alquiler vencido (mora)"
+            />
+            <Typography variant="body2" color="text.secondary" mb={2}>
+              Todos los días a las 00:30 se les avisa a los inquilinos con pagos vencidos, con el cálculo de interés.
+              Los pagos se siguen marcando como vencidos igual; esto solo pausa el mensaje.
+            </Typography>
+
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={data.expiryNotificationsEnabled}
+                  onChange={(e) => update.mutate({ expiryNotificationsEnabled: e.target.checked })}
+                  disabled={update.isPending}
+                />
+              }
+              label="Aviso de vencimiento de contrato"
+            />
+            <Typography variant="body2" color="text.secondary" mb={2}>
+              Todos los días a las 09:00 se avisa a admin, inquilino y propietario cuando un contrato
+              está por vencer (60/30/15 días antes).
+            </Typography>
+
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={data.monthlyNotificationsEnabled}
+                  onChange={(e) => update.mutate({ monthlyNotificationsEnabled: e.target.checked })}
+                  disabled={update.isPending}
+                />
+              }
+              label="Recordatorio mensual de alquiler"
+            />
+            <Typography variant="body2" color="text.secondary">
+              El día 1 de cada mes a las 07:00 se le recuerda a cada inquilino el monto del mes
+              y se le manda a cada propietario un resumen de cobros.
+            </Typography>
+
+            {update.isError && (
+              <Alert severity="error" sx={{ mt: 2 }}>No se pudo guardar el cambio.</Alert>
+            )}
+          </Paper>
         </>
       )}
     </Box>

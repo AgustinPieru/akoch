@@ -1,6 +1,7 @@
 import prisma from '../../lib/prisma';
 import { env } from '../../config/env';
 import { sendWhatsAppText } from './notification.service';
+import { getSettings } from '../settings/settings.service';
 
 const MONTHS = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
@@ -70,6 +71,12 @@ export async function runMarkLatePayments() {
   let notified = 0;
   const bnaRate = env.BNA_INTEREST_RATE;
 
+  const settings = await getSettings();
+  if (!settings.lateNotificationsEnabled) {
+    console.log('[runMarkLatePayments] Notificaciones de mora pausadas en Configuración — se omiten los WA.');
+    return { marked: pendingLate.length, notified: 0, skipped: true };
+  }
+
   for (const payment of pendingLate) {
     const tenant = payment.contract.tenants[0]?.tenant;
     if (!tenant?.phone) continue;
@@ -103,6 +110,12 @@ export async function runMarkLatePayments() {
 const EXPIRY_THRESHOLDS = [60, 30, 15];
 
 export async function runContractExpiryAlerts() {
+  const settings = await getSettings();
+  if (!settings.expiryNotificationsEnabled) {
+    console.log('[runContractExpiryAlerts] Notificaciones de vencimiento pausadas en Configuración — se omiten.');
+    return { totalAlerts: 0, skipped: true };
+  }
+
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -192,6 +205,13 @@ export async function runContractExpiryAlerts() {
 // ─── 3. Notificaciones mensuales (1° de cada mes) ─────────────────────────────
 
 export async function runMonthlyPaymentNotifications() {
+  const settings = await getSettings();
+  if (!settings.monthlyNotificationsEnabled) {
+    console.log('[runMonthlyPaymentNotifications] Notificaciones mensuales pausadas en Configuración — se omiten.');
+    const now = new Date();
+    return { month: now.getMonth() + 1, year: now.getFullYear(), tenantNotified: 0, ownerNotified: 0, paymentsProcessed: 0, skipped: true };
+  }
+
   const now = new Date();
   const month = now.getMonth() + 1;
   const year = now.getFullYear();

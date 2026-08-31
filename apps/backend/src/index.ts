@@ -91,6 +91,11 @@ app.post('/api/v1/contracts/run-expire', async (_req, res) => {
 // Trigger manual: marcar pagos vencidos como LATE + WA
 app.post('/api/v1/automation/run-late-payments', async (_req, res) => {
   try {
+    const settings = await getSettings();
+    if (!settings.lateNotificationsEnabled) {
+      res.status(409).json({ error: 'Las notificaciones de mora están pausadas en Configuración', code: 'LATE_NOTIFICATIONS_PAUSED' });
+      return;
+    }
     const result = await runMarkLatePayments();
     res.json(result);
   } catch (err: any) {
@@ -101,6 +106,11 @@ app.post('/api/v1/automation/run-late-payments', async (_req, res) => {
 // Trigger manual: alertas de contratos por vencer
 app.post('/api/v1/automation/run-expiry-alerts', async (_req, res) => {
   try {
+    const settings = await getSettings();
+    if (!settings.expiryNotificationsEnabled) {
+      res.status(409).json({ error: 'Las notificaciones de vencimiento están pausadas en Configuración', code: 'EXPIRY_NOTIFICATIONS_PAUSED' });
+      return;
+    }
     const result = await runContractExpiryAlerts();
     res.json(result);
   } catch (err: any) {
@@ -111,6 +121,11 @@ app.post('/api/v1/automation/run-expiry-alerts', async (_req, res) => {
 // Trigger manual: notificaciones mensuales a inquilinos y propietarios
 app.post('/api/v1/automation/run-monthly-notifications', async (_req, res) => {
   try {
+    const settings = await getSettings();
+    if (!settings.monthlyNotificationsEnabled) {
+      res.status(409).json({ error: 'Las notificaciones mensuales están pausadas en Configuración', code: 'MONTHLY_NOTIFICATIONS_PAUSED' });
+      return;
+    }
     const result = await runMonthlyPaymentNotifications();
     res.json(result);
   } catch (err: any) {

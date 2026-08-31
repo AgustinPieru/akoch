@@ -13,6 +13,9 @@ export async function getSettings() {
 
 export interface UpdateSettingsInput {
   autoAdjustEnabled?: boolean;
+  lateNotificationsEnabled?: boolean;
+  expiryNotificationsEnabled?: boolean;
+  monthlyNotificationsEnabled?: boolean;
   agencyName?: string;
   agencyCuit?: string;
   agencyAddress?: string;

@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { body, validationResult } from 'express-validator';
 import { authenticate } from '../../middleware/auth.middleware';
-import { getWhatsAppStatus, getQrDataUrl, initWhatsApp, disconnectWhatsApp, addSseClient } from './whatsapp.client';
+import { getWhatsAppStatus, getQrDataUrl, initWhatsApp, disconnectWhatsApp, resetWhatsAppSession, addSseClient } from './whatsapp.client';
 import { sendReceiptViaWhatsApp, sendReceiptViaEmail } from './notification.service';
 import jwt from 'jsonwebtoken';
 import { env } from '../../config/env';
@@ -50,6 +50,16 @@ router.post('/whatsapp/init', (_req, res) => {
 router.post('/whatsapp/disconnect', async (_req, res) => {
   await disconnectWhatsApp();
   res.json({ message: 'Desconectado' });
+});
+
+// Borra la sesión de disco y reinicia desde cero (nuevo QR)
+router.post('/whatsapp/reset', async (_req, res) => {
+  try {
+    await resetWhatsAppSession();
+    res.json({ message: 'Sesión eliminada, generando nuevo QR...' });
+  } catch (err: any) {
+    res.status(500).json({ error: err?.message ?? 'Error al reiniciar sesión de WhatsApp' });
+  }
 });
 
 // Enviar recibo por WhatsApp

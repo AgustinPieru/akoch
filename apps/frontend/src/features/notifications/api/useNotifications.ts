@@ -53,6 +53,16 @@ export function useDisconnectWhatsApp() {
   });
 }
 
+export function useResetWhatsApp() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => api.post('/notifications/whatsapp/reset').then((r) => r.data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['whatsapp-status'] });
+    },
+  });
+}
+
 export function useSendReceiptWhatsApp() {
   return useMutation({
     mutationFn: ({ paymentId, phone }: { paymentId: number; phone: string }) =>
