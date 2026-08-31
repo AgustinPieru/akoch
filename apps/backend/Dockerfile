@@ -35,9 +35,6 @@ RUN npx prisma generate
 COPY . .
 RUN npm run build
 
-# Compilar el seed por separado (excluido del tsconfig principal)
-RUN npx tsc prisma/seed.ts --outDir dist --module commonjs --target ES2020 --esModuleInterop true --skipLibCheck true --resolveJsonModule true
-
 # Eliminar devDeps del contenedor final
 RUN npm prune --omit=dev
 
