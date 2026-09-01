@@ -33,6 +33,8 @@
     "node-cron": "^4.2.1",
     "nodemailer": "^8.0.10",
     "pdfkit": "^0.18.0",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2",
     "qrcode": "^1.5.4",
     "resend": "^6.12.3",
     "whatsapp-web.js": "https://github.com/pedroslopez/whatsapp-web.js/archive/refs/heads/main.tar.gz"

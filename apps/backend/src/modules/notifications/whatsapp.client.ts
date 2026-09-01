@@ -2,6 +2,14 @@ import { Client, LocalAuth } from 'whatsapp-web.js';
 import qrcode from 'qrcode';
 import fs from 'fs';
 import path from 'path';
+import puppeteerExtra from 'puppeteer-extra';
+import StealthPlugin from 'puppeteer-extra-plugin-stealth';
+
+// WhatsApp detecta y bloquea la vinculación de navegadores automatizados (navigator.webdriver
+// y otras huellas de Puppeteer/Chromium headless) aunque el mismo número vincule sin problema
+// desde un navegador normal. El plugin stealth enmascara esas huellas antes de que
+// whatsapp-web.js se conecte al navegador.
+puppeteerExtra.use(StealthPlugin());
 
 const SESSION_ROOT = path.join(process.cwd(), '.whatsapp-session');
 const SESSION_PATH = path.join(SESSION_ROOT, 'session');
@@ -67,8 +75,32 @@ async function destroyClientSafe(timeoutMs = 5000) {
   ]);
 }
 
+// destroy() solo cierra el navegador local: WhatsApp sigue viendo el dispositivo
+// como "vinculado" (cuenta para el límite de 4 dispositivos de la cuenta) hasta que
+// expira por su cuenta. logout() le avisa a WhatsApp que desvincule el dispositivo.
+// Solo tiene sentido si la sesión llegó a autenticarse ('ready'); si no, cae a destroy().
+async function logoutClientSafe(timeoutMs = 8000) {
+  if (!client) return;
+  const current = client;
+  client = null;
+  try {
+    await Promise.race([
+      current.logout(),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('logout timeout')), timeoutMs)),
+    ]);
+    console.log('[whatsapp] Dispositivo desvinculado correctamente');
+  } catch (err: any) {
+    console.error('[whatsapp] logout() falló, forzando destroy():', err?.message || err);
+    await current.destroy().catch(() => {});
+  }
+}
+
 export async function disconnectWhatsApp() {
-  await destroyClientSafe();
+  if (status === 'ready') {
+    await logoutClientSafe();
+  } else {
+    await destroyClientSafe();
+  }
   status = 'disconnected';
   qrDataUrl = null;
   loadingPercent = 0;
@@ -80,7 +112,11 @@ export async function disconnectWhatsApp() {
 // Borra la sesión persistida en disco y arranca de cero para forzar un QR nuevo.
 // Útil cuando la conexión queda trabada (sesión corrupta, Chromium colgado, etc.).
 export async function resetWhatsAppSession() {
-  await destroyClientSafe();
+  if (status === 'ready') {
+    await logoutClientSafe();
+  } else {
+    await destroyClientSafe();
+  }
   status = 'disconnected';
   qrDataUrl = null;
   loadingPercent = 0;
@@ -105,19 +141,39 @@ export function initWhatsApp() {
   loadingPercent = 0;
   loadingMessage = 'Iniciando navegador...';
 
+  initWhatsAppAsync().catch((err) => {
+    console.error('[whatsapp] Error al inicializar cliente:', err?.message || err);
+    status = 'disconnected';
+    loadingPercent = 0;
+    loadingMessage = '';
+    qrDataUrl = null;
+    client = null;
+    broadcastStatus();
+  });
+  console.log('[whatsapp] Inicializando cliente...');
+}
+
+async function initWhatsAppAsync() {
+  // Lanzamos nosotros el navegador (en vez de dejar que whatsapp-web.js lo haga con
+  // Puppeteer plano) para que pase por el plugin stealth antes de conectarse.
+  // --single-process/--no-zygote se sacaron a propósito: ningún navegador real corre
+  // así y es una de las señales que WhatsApp usa para detectar automatización.
+  const browser = await puppeteerExtra.launch({
+    headless: true,
+    executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-gpu',
+      '--no-first-run',
+    ],
+  });
+
   client = new Client({
     authStrategy: new LocalAuth({ dataPath: '.whatsapp-session' }),
     puppeteer: {
-      headless: true,
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-gpu',
-        '--no-first-run',
-        '--no-zygote',
-        '--single-process',
-      ],
+      browserWSEndpoint: browser.wsEndpoint(),
     },
   });
 
@@ -172,14 +228,12 @@ export function initWhatsApp() {
     console.log(`[whatsapp] Desconectado: ${reason}`);
   });
 
-  client.initialize().catch((err) => {
-    console.error('[whatsapp] Error al inicializar cliente:', err?.message || err);
-    status = 'disconnected';
-    loadingPercent = 0;
-    loadingMessage = '';
-    qrDataUrl = null;
-    client = null;
-    broadcastStatus();
-  });
-  console.log('[whatsapp] Inicializando cliente...');
+  try {
+    await client.initialize();
+  } catch (err) {
+    // Si falla antes de que wwebjs llegue a llamar destroy() internamente,
+    // el navegador que lanzamos nosotros queda huérfano.
+    await browser.close().catch(() => {});
+    throw err;
+  }
 }
