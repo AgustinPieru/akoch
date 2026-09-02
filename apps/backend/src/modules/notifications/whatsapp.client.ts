@@ -1,15 +1,23 @@
-import { Client, LocalAuth } from 'whatsapp-web.js';
 import qrcode from 'qrcode';
 import fs from 'fs';
 import path from 'path';
 import puppeteerExtra from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
+import type { Client as WWebClient } from 'whatsapp-web.js';
 
 // WhatsApp detecta y bloquea la vinculación de navegadores automatizados (navigator.webdriver
 // y otras huellas de Puppeteer/Chromium headless) aunque el mismo número vincule sin problema
-// desde un navegador normal. El plugin stealth enmascara esas huellas antes de que
-// whatsapp-web.js se conecte al navegador.
+// desde un navegador normal. El plugin stealth enmascara esas huellas.
 puppeteerExtra.use(StealthPlugin());
+
+// whatsapp-web.js hace `require('puppeteer')` una sola vez al cargarse y guarda esa
+// referencia en su propio closure interno — pasarle `browserWSEndpoint` NO alcanza,
+// porque igual crea su página con el Puppeteer plano (sin los parches de stealth) vía
+// su propio `puppeteer.connect()`. La única forma de que use la instancia con stealth
+// es pisar la caché de módulos de Node ANTES de importar la librería.
+require.cache[require.resolve('puppeteer')] = require.cache[require.resolve('puppeteer-extra')];
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { Client, LocalAuth } = require('whatsapp-web.js') as typeof import('whatsapp-web.js');
 
 const SESSION_ROOT = path.join(process.cwd(), '.whatsapp-session');
 const SESSION_PATH = path.join(SESSION_ROOT, 'session');
@@ -26,7 +34,7 @@ function clearSessionLocks() {
 
 export type WhatsAppStatus = 'disconnected' | 'initializing' | 'loading' | 'qr_pending' | 'ready';
 
-let client: Client | null = null;
+let client: WWebClient | null = null;
 let qrDataUrl: string | null = null;
 let status: WhatsAppStatus = 'disconnected';
 let loadingPercent = 0;
@@ -141,39 +149,19 @@ export function initWhatsApp() {
   loadingPercent = 0;
   loadingMessage = 'Iniciando navegador...';
 
-  initWhatsAppAsync().catch((err) => {
-    console.error('[whatsapp] Error al inicializar cliente:', err?.message || err);
-    status = 'disconnected';
-    loadingPercent = 0;
-    loadingMessage = '';
-    qrDataUrl = null;
-    client = null;
-    broadcastStatus();
-  });
-  console.log('[whatsapp] Inicializando cliente...');
-}
-
-async function initWhatsAppAsync() {
-  // Lanzamos nosotros el navegador (en vez de dejar que whatsapp-web.js lo haga con
-  // Puppeteer plano) para que pase por el plugin stealth antes de conectarse.
   // --single-process/--no-zygote se sacaron a propósito: ningún navegador real corre
   // así y es una de las señales que WhatsApp usa para detectar automatización.
-  const browser = await puppeteerExtra.launch({
-    headless: true,
-    executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
-    args: [
-      '--no-sandbox',
-      '--disable-setuid-sandbox',
-      '--disable-dev-shm-usage',
-      '--disable-gpu',
-      '--no-first-run',
-    ],
-  });
-
   client = new Client({
     authStrategy: new LocalAuth({ dataPath: '.whatsapp-session' }),
     puppeteer: {
-      browserWSEndpoint: browser.wsEndpoint(),
+      headless: true,
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-gpu',
+        '--no-first-run',
+      ],
     },
   });
 
@@ -228,12 +216,14 @@ async function initWhatsAppAsync() {
     console.log(`[whatsapp] Desconectado: ${reason}`);
   });
 
-  try {
-    await client.initialize();
-  } catch (err) {
-    // Si falla antes de que wwebjs llegue a llamar destroy() internamente,
-    // el navegador que lanzamos nosotros queda huérfano.
-    await browser.close().catch(() => {});
-    throw err;
-  }
+  client.initialize().catch((err: any) => {
+    console.error('[whatsapp] Error al inicializar cliente:', err?.message || err);
+    status = 'disconnected';
+    loadingPercent = 0;
+    loadingMessage = '';
+    qrDataUrl = null;
+    client = null;
+    broadcastStatus();
+  });
+  console.log('[whatsapp] Inicializando cliente...');
 }
